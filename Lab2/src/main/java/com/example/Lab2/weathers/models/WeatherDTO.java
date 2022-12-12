@@ -1,4 +1,4 @@
-package com.example.Lab2.Weathers.Models;
+package com.example.Lab2.weathers.models;
 
 
 import org.springframework.data.mongodb.core.mapping.Document;

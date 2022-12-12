@@ -1,10 +1,10 @@
-package com.example.Lab2.Response;
+package com.example.Lab2.response;
 
 import java.util.List;
 
 public class Response {
 
-    private  String status;
+    private String status;
     private List<?> result;
 
     private String message;

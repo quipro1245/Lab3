@@ -6,13 +6,13 @@ import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
 
-public interface LocationRepository extends MongoRepository<Location,String> {
+public interface LocationRepository extends MongoRepository<Location, String> {
 
     @Query("{name:'?0'}")
     Location findItemByName(String name);
 
-    @Query(value="{country:'?0'}", fields="{'name' : 1, 'country' : 1}")
+    @Query(value = "{country:'?0'}", fields = "{'name' : 1, 'country' : 1}")
     List<Location> findAll(String country);
 
-    public long count();
+    long count();
 }

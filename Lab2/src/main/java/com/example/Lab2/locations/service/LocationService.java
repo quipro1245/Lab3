@@ -1,13 +1,11 @@
-package com.example.Lab2.Locations.Service;
-import com.example.Lab2.Locations.Controllers.LocationController;
-import com.example.Lab2.Locations.Models.LocationDTO;
-import com.example.Lab2.Locations.Models.LocationRequest;
-import com.example.Lab2.controller.ConnectionMongoDB;
+package com.example.Lab2.locations.service;
 
+import com.example.Lab2.locations.models.LocationDTO;
+import com.example.Lab2.locations.models.LocationRequest;
+import com.example.Lab2.controller.ConnectionMongoDB;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mongodb.client.*;
-import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -16,14 +14,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
 public class LocationService {
     private static final int COLUMN_INDEX_ID = 0;
     private static final int COLUMN_INDEX_NAME = 1;
@@ -169,13 +164,6 @@ public class LocationService {
         }
     }
 
-    public MongoDatabase getDatabase() {
-        String uri = "mongodb://localhost:27017";
-        MongoClient mongoClient = MongoClients.create(uri);
-        MongoDatabase database = mongoClient.getDatabase("all_things");
-        return database;
-    }
-
     // Get list locations
     //@PostMapping(value = "/getLocations")
     public static List<LocationDTO> getListLocations() {
@@ -230,7 +218,7 @@ public class LocationService {
         List<LocationDTO> listLocation = getListLocations();
         List<LocationDTO> findLocation = new ArrayList<>();
         // Xóa khoảng trắng đầu và cuối chuỗi
-        String input_trim = input_object.toString().trim();
+        String input_trim = input_object.trim();
         String input_format = input_trim;
         if (input_trim.contains("  "))
             input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
@@ -255,8 +243,6 @@ public class LocationService {
         }
         return findLocation;
     }
-
-
 
     // Export file Json for Locations
     //@PostMapping(value = "/exportJsonLocations")
@@ -337,13 +323,14 @@ public class LocationService {
         }
         return listLocation;
     }
-    public static List<LocationDTO> testfindLocations( LocationRequest input) throws IOException {
+
+    public static List<LocationDTO> testfindLocations(LocationRequest input) throws IOException {
         String input_object = input.getInput();
 
         List<LocationDTO> listLocation = getListLocations();
         List<LocationDTO> findLocation = new ArrayList<>();
         // Xóa khoảng trắng đầu và cuối chuỗi
-        String input_trim = input_object.toString().trim();
+        String input_trim = input_object.trim();
         String input_format = input_trim;
         if (input_trim.contains("  "))
             input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
@@ -367,5 +354,12 @@ public class LocationService {
             }
         }
         return findLocation;
+    }
+
+    public MongoDatabase getDatabase() {
+        String uri = "mongodb://localhost:27017";
+        MongoClient mongoClient = MongoClients.create(uri);
+        MongoDatabase database = mongoClient.getDatabase("all_things");
+        return database;
     }
 }

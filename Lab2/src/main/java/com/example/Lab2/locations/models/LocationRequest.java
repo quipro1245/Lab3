@@ -1,7 +1,7 @@
-package com.example.Lab2.Locations.Models;
+package com.example.Lab2.locations.models;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+
 public class LocationRequest {
 
     @NotNull(message = "input không được bỏ trống")

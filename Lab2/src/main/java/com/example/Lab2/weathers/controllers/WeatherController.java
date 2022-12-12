@@ -1,12 +1,11 @@
-package com.example.Lab2.Weathers.Controllers;
+package com.example.Lab2.weathers.controllers;
 
 
-import com.example.Lab2.Locations.Controllers.LocationController;
-import com.example.Lab2.Response.Response;
-import com.example.Lab2.Weathers.Models.WeatherDTO;
-import com.example.Lab2.Weathers.Models.WeatherRequest;
-
-import com.example.Lab2.Weathers.Service.WeatherService;
+import com.example.Lab2.locations.controllers.LocationController;
+import com.example.Lab2.response.Response;
+import com.example.Lab2.weathers.models.WeatherDTO;
+import com.example.Lab2.weathers.models.WeatherRequest;
+import com.example.Lab2.weathers.service.WeatherService;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,22 +24,24 @@ import java.util.List;
 public class WeatherController {
 
     private final static Logger logger = LogManager.getLogger(LocationController.class);
+
     @PostMapping(value = "/postWeather")
-    public static List<WeatherDTO> postListWeather( @RequestBody String date) {
+    public  List<WeatherDTO> postListWeather(@RequestBody String date) {
         return WeatherService.getListWeather(date);
     }
-    @PostMapping(value = "/findWeatherFollowDate")
-    public static ResponseEntity<Response> findWeatherFollowDate(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
-        Response weatherResponse = new Response();
-        if(bindingResult.hasErrors()){
 
-            logger.error("Test find locations: "+bindingResult.getAllErrors().get(0).getDefaultMessage());
+    @PostMapping(value = "/findWeatherFollowDate")
+    public  ResponseEntity<Response> findWeatherFollowDate(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
+        Response weatherResponse = new Response();
+        if (bindingResult.hasErrors()) {
+
+            logger.error("Find weather follow date: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
             ArrayList message = new ArrayList<>();
             for (ObjectError error : bindingResult.getAllErrors()) {
                 message.add(error.getDefaultMessage());
             }
-            weatherResponse.setMessage("ERROR: Test find locations: "+message);
+            weatherResponse.setMessage("ERROR: find weather: " + message);
             return ResponseEntity.badRequest().body(weatherResponse);
         }
 
@@ -48,16 +49,17 @@ public class WeatherController {
         weatherResponse.setStatus("200");
         weatherResponse.setResult(WeatherService.findWeatherFollowDate(input));
         weatherResponse.setMessage("Success");
-        return  ResponseEntity.ok(weatherResponse);
+        return ResponseEntity.ok(weatherResponse);
     }
-    @PostMapping(value = "/exportJsonWeather")
-    public static ResponseEntity<Response> exportJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
-        Response weatherResponse = new Response();
-        if(bindingResult.hasErrors()){
 
-            logger.error("Test find locations: "+bindingResult.getAllErrors().get(0).getDefaultMessage());
+    @PostMapping(value = "/exportJsonWeather")
+    public  ResponseEntity<Response> exportJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
+        Response weatherResponse = new Response();
+        if (bindingResult.hasErrors()) {
+
+            logger.error("Export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: Test find locations: "+bindingResult.getAllErrors().get(0).getDefaultMessage());
+            weatherResponse.setMessage("ERROR: export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             return ResponseEntity.badRequest().body(weatherResponse);
         }
         //return WeatherService.exportJsonWeather(input);
@@ -65,17 +67,17 @@ public class WeatherController {
         weatherResponse.setStatus("200");
         weatherResponse.setResult(WeatherService.exportJsonWeather(input));
         weatherResponse.setMessage("Success");
-        return  ResponseEntity.ok(weatherResponse);
+        return ResponseEntity.ok(weatherResponse);
     }
 
     @PostMapping(value = "/exportExcelWeather")
-    public static ResponseEntity<Response> exportExcelWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
+    public  ResponseEntity<Response> exportExcelWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
         Response weatherResponse = new Response();
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
 
-            logger.error("Test find locations: "+bindingResult.getAllErrors().get(0).getDefaultMessage());
+            logger.error("Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: Test find locations: "+bindingResult.getAllErrors().get(0).getDefaultMessage());
+            weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             return ResponseEntity.badRequest().body(weatherResponse);
         }
         //return  WeatherService.exportExcelWeather(input);
@@ -83,6 +85,6 @@ public class WeatherController {
         weatherResponse.setResult(WeatherService.exportExcelWeather(input));
         weatherResponse.setMessage("Success");
 
-        return  ResponseEntity.ok(weatherResponse);
+        return ResponseEntity.ok(weatherResponse);
     }
 }

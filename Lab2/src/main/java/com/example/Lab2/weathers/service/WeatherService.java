@@ -1,6 +1,7 @@
-package com.example.Lab2.Weathers.Service;
-import com.example.Lab2.Weathers.Models.WeatherDTO;
-import com.example.Lab2.Weathers.Models.WeatherRequest;
+package com.example.Lab2.weathers.service;
+
+import com.example.Lab2.weathers.models.WeatherDTO;
+import com.example.Lab2.weathers.models.WeatherRequest;
 import com.example.Lab2.controller.ConnectionMongoDB;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,6 +15,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.bson.Document;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -21,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.Lab2.Locations.Service.LocationService.*;
+import static com.example.Lab2.locations.service.LocationService.*;
 
 public class WeatherService {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);
@@ -65,7 +67,7 @@ public class WeatherService {
 
     // Get list weather
     //@PostMapping(value = "/getWeather")
-    public static List<WeatherDTO> getListWeather( String date) {
+    public static List<WeatherDTO> getListWeather(String date) {
 
         String url = "mongodb://localhost:27017";
         List<WeatherDTO> listLocation = new ArrayList<>();
@@ -76,7 +78,7 @@ public class WeatherService {
             FindIterable<Document> myDoc = collection.find();
 
             if (myDoc == null) {
-                logger.error("location không tìm thấy");
+                logger.error("Get list weather không tìm thấy");
             } else {
                 for (Document doc : myDoc) {
                     WeatherDTO weatherDTO = new WeatherDTO();
@@ -118,7 +120,7 @@ public class WeatherService {
                 }
             }
         } catch (Exception e) {
-            logger.error(String.format("Get list location: Không thể lấy được data url: %s, date: %s", url, date));
+            logger.error(String.format("Get list weather: Không thể lấy được data url: %s, date: %s", url, date));
 
         }
         return listLocation;
@@ -157,7 +159,7 @@ public class WeatherService {
     }
 
     //@PostMapping(value = "/findWeatherFollowDate")
-    public static List<WeatherDTO> findWeatherFollowDate( WeatherRequest input) {
+    public static List<WeatherDTO> findWeatherFollowDate(WeatherRequest input) {
         String startDate;
         String endDate;
         String[] location_id_arr = null;
@@ -165,7 +167,7 @@ public class WeatherService {
         String location_id_Object = input.getLocation_id();
         List<WeatherDTO> listWeatherDTO;
         List<WeatherDTO> findWeatherFollowDate = new ArrayList<>();
-        if (datetime_range_Object.toString().trim().equals("")) {
+        if (datetime_range_Object.trim().equals("")) {
             startDate = "";
             endDate = "";
         } else {
@@ -178,10 +180,10 @@ public class WeatherService {
                 endDate = datetime_range_arr[1];
             }
         }
-        if (location_id_Object.toString().trim().equals("")) {
+        if (location_id_Object.trim().equals("")) {
             logger.warn("Find weather follow date: location is null");
         } else {
-            location_id_arr = location_id_Object.toString().split(",");
+            location_id_arr = location_id_Object.split(",");
         }
         try {
             // Trường hợp datetime_range có giá trị 1 trong 2 hoặc cả 2 bị null
@@ -233,7 +235,7 @@ public class WeatherService {
     }
 
     //@PostMapping(value = "/exportJsonWeather")
-    public static List<WeatherDTO> exportJsonWeather( WeatherRequest input) {
+    public static List<WeatherDTO> exportJsonWeather(WeatherRequest input) {
         List<WeatherDTO> listWeather = findWeatherFollowDate(input);
         JSONArray listJsonObject = new JSONArray();
         for (WeatherDTO weather : listWeather) {
@@ -292,6 +294,7 @@ public class WeatherService {
         }
         return listWeather;
     }
+
     public static void writeHeader(Sheet sheet, int rowIndex) {
         // create CellStyle
         CellStyle cellStyle = createStyleForHeader(sheet);
@@ -546,7 +549,8 @@ public class WeatherService {
 //        String columnQuantity = CellReference.convertNumToColString(COLUMN_INDEX_QUANTITY);
 //        cell.setCellFormula(columnPrice + currentRow + "*" + columnQuantity + currentRow);
     }
-    public static List<WeatherDTO> exportExcelWeather( WeatherRequest input) throws IOException {
+
+    public static List<WeatherDTO> exportExcelWeather(WeatherRequest input) throws IOException {
         //List<LocationDTO> listLocation = getListLocations();
         List<WeatherDTO> listWeather = findWeatherFollowDate(input);
         if (listWeather == null)
