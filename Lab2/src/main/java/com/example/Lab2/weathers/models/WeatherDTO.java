@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("Weather")
 public class WeatherDTO {
 
-    private int id;
+    private String id;
     private int time_epoch;
     private String time;
     private Double temp_c;
@@ -40,11 +40,11 @@ public class WeatherDTO {
     private Double gust_mph;
     private Double gust_kph;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
