@@ -1,7 +1,7 @@
 package com.example.Lab2.weathers.controllers;
 
 
-import com.example.Lab2.locations.controllers.LocationController;
+import com.example.Lab2.controller.MongoConfig;
 import com.example.Lab2.response.Response;
 import com.example.Lab2.weathers.models.WeatherDTO;
 import com.example.Lab2.weathers.models.WeatherRequest;
@@ -9,6 +9,7 @@ import com.example.Lab2.weathers.service.WeatherService;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -23,15 +24,17 @@ import java.util.List;
 @RestController
 public class WeatherController {
 
-    private final static Logger logger = LogManager.getLogger(LocationController.class);
+    private final static Logger logger = LogManager.getLogger(WeatherController.class);
+    @Autowired
+    MongoConfig mongoConfig;
 
     @PostMapping(value = "/postWeather")
-    public  List<WeatherDTO> postListWeather(@RequestBody String date) {
+    public List<WeatherDTO> postListWeather(@RequestBody String date) {
         return WeatherService.getListWeather(date);
     }
 
     @PostMapping(value = "/findWeatherFollowDate")
-    public  ResponseEntity<Response> findWeatherFollowDate(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
+    public ResponseEntity<Response> findWeatherFollowDate(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
         Response weatherResponse = new Response();
         if (bindingResult.hasErrors()) {
 
@@ -53,7 +56,7 @@ public class WeatherController {
     }
 
     @PostMapping(value = "/exportJsonWeather")
-    public  ResponseEntity<Response> exportJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
+    public ResponseEntity<Response> exportJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
         Response weatherResponse = new Response();
         if (bindingResult.hasErrors()) {
 
@@ -71,7 +74,7 @@ public class WeatherController {
     }
 
     @PostMapping(value = "/exportExcelWeather")
-    public  ResponseEntity<Response> exportExcelWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
+    public ResponseEntity<Response> exportExcelWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
         Response weatherResponse = new Response();
         if (bindingResult.hasErrors()) {
 
@@ -87,4 +90,24 @@ public class WeatherController {
 
         return ResponseEntity.ok(weatherResponse);
     }
+    @PostMapping(value = "/testGetListWeather")
+    public ResponseEntity<Response> testGetListWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult ) {
+
+        Response weatherResponse = new Response();
+        if (bindingResult.hasErrors()) {
+
+            logger.error("Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            weatherResponse.setStatus("400");
+            weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(weatherResponse);
+        }
+        //return  WeatherService.exportExcelWeather(input);
+        weatherResponse.setStatus("200");
+        weatherResponse.setResult(WeatherService.findWeatherFollowRequest(input,mongoConfig.getUrl(), mongoConfig.getDb()));
+        weatherResponse.setMessage("Success");
+
+        return ResponseEntity.ok(weatherResponse);
+
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.example.Lab2.locations.controllers;
 
+import com.example.Lab2.controller.MongoConfig;
 import com.example.Lab2.locations.models.LocationDTO;
 import com.example.Lab2.locations.models.LocationRequest;
 import com.example.Lab2.locations.service.LocationService;
@@ -7,6 +8,7 @@ import com.example.Lab2.response.Response;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,16 +20,18 @@ import java.util.List;
 
 @RestController(value = "RestController")
 public class LocationController {
-
     private final static Logger logger = LogManager.getLogger(LocationController.class);
+    @Autowired
+    MongoConfig mongoConfig;
 
     @PostMapping(value = "/getLocations")
-    public static List<LocationDTO> getListLocations() {
-        return LocationService.getListLocations();
+    public List<LocationDTO> getListLocations() {
+
+        return LocationService.getListLocations(mongoConfig.getUrl(), mongoConfig.getDb());
     }
 
     @PostMapping(value = "/findLocations")
-    public static ResponseEntity<Response> findLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
+    public ResponseEntity<Response> findLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
 
         Response locationResponse = new Response();
         if (bindingResult.hasErrors()) {
@@ -38,13 +42,13 @@ public class LocationController {
             return ResponseEntity.badRequest().body(locationResponse);
         }
         locationResponse.setStatus("200");
-        locationResponse.setResult(LocationService.findLocations(input));
+        locationResponse.setResult(LocationService.findLocations(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         locationResponse.setMessage("Success");
         return ResponseEntity.ok(locationResponse);
     }
 
     @PostMapping(value = "/exportJsonLocations")
-    public static ResponseEntity<Response> exportJsonLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
+    public ResponseEntity<Response> exportJsonLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
         //return  LocationService.exportJsonLocations(input);
         Response locationResponse = new Response();
         if (bindingResult.hasErrors()) {
@@ -55,13 +59,13 @@ public class LocationController {
             return ResponseEntity.badRequest().body(locationResponse);
         }
         locationResponse.setStatus("200");
-        locationResponse.setResult(LocationService.exportJsonLocations(input));
+        locationResponse.setResult(LocationService.exportJsonLocations(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         locationResponse.setMessage("Success");
         return ResponseEntity.ok(locationResponse);
     }
 
     @PostMapping(value = "/exportExcelLocations")
-    public static ResponseEntity<Response> exportExcelLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
+    public ResponseEntity<Response> exportExcelLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
         //return LocationService.exportExcelLocations(input);
         Response locationResponse = new Response();
         if (bindingResult.hasErrors()) {
@@ -72,7 +76,7 @@ public class LocationController {
             return ResponseEntity.badRequest().body(locationResponse);
         }
         locationResponse.setStatus("200");
-        locationResponse.setResult(LocationService.exportExcelLocations(input));
+        locationResponse.setResult(LocationService.exportExcelLocations(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         locationResponse.setMessage("Success");
         return ResponseEntity.ok(locationResponse);
     }
@@ -95,4 +99,21 @@ public class LocationController {
 //        locationResponse.setMessage("Success");
 //        return  ResponseEntity.ok(locationResponse);
 //    }
+
+    @PostMapping(value = "/testGetListLocations")
+    public ResponseEntity<Response> testGetListLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult) throws IOException {
+
+        Response locationResponse = new Response();
+        if (bindingResult.hasErrors()) {
+
+            logger.error("testGetListLocations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            locationResponse.setStatus("400");
+            locationResponse.setMessage("ERROR: testGetListLocations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(locationResponse);
+        }
+        locationResponse.setStatus("200");
+        locationResponse.setResult(LocationService.testGetListLocations(input, mongoConfig.getUrl(), mongoConfig.getDb()));
+        locationResponse.setMessage("Success");
+        return ResponseEntity.ok(locationResponse);
+    }
 }
