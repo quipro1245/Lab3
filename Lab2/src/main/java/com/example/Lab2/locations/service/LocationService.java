@@ -1,17 +1,22 @@
 package com.example.Lab2.locations.service;
 
+import com.example.Lab2.controller.ConnectionMongoDB;
 import com.example.Lab2.locations.models.LocationDTO;
 import com.example.Lab2.locations.models.LocationRequest;
-import com.example.Lab2.controller.ConnectionMongoDB;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mongodb.client.*;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -166,30 +171,14 @@ public class LocationService {
 
     // Get list locations
     //@PostMapping(value = "/getLocations")
-    public static List<LocationDTO> getListLocations() {
 
-        String url = "mongodb://localhost:27017";
+    public static List<LocationDTO> getListLocations(String url, String db) {
         List<LocationDTO> listLocation = new ArrayList<>();
-
-        // MongoDatabase database = getDatabase();
         try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
-            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, "all_things");
-            //MongoDatabase database = new ConnectionMongoDB().getMongoDatabase();
+            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
             MongoCollection<Document> collection = database.getCollection("Locations");
             FindIterable<Document> myDoc = collection.find();
-
-            //        Document document = myDoc.first();
-            //        LocationDTO locationDTO = new LocationDTO();
-            //        locationDTO.setId(Integer.parseInt(document.get("id").toString()));
-            //        locationDTO.setName(document.get("name").toString());
-            //        locationDTO.setCountry(document.get("country").toString());
-            //        locationDTO.setRegion(document.get("region").toString());
-            //        locationDTO.setLat(Double.parseDouble(document.get("lat").toString()));
-            //        locationDTO.setLon(Double.parseDouble(document.get("lon").toString()));
-            //        locationDTO.setUrl(document.get("url").toString());
-            //ArrayList<Document> location = new ArrayList<>();
-            //locationDTO.add(document);
-            if (myDoc == null) {
+            if (myDoc.first().isEmpty()) {
                 logger.error("location không tìm thấy");
             } else {
                 for (Document doc : myDoc) {
@@ -198,8 +187,8 @@ public class LocationService {
                     locationDTO.setName(doc.get("name").toString());
                     locationDTO.setCountry(doc.get("country").toString());
                     locationDTO.setRegion(doc.get("region").toString());
-                    locationDTO.setLat(Double.parseDouble(doc.get("lat").toString()));
-                    locationDTO.setLon(Double.parseDouble(doc.get("lon").toString()));
+                    locationDTO.setLat(doc.get("lat").toString());
+                    locationDTO.setLon(doc.get("lon").toString());
                     locationDTO.setUrl(doc.get("url").toString());
                     listLocation.add(locationDTO);
                 }
@@ -212,45 +201,53 @@ public class LocationService {
     }
 
     //@PostMapping(value = "/postFindLocations")
-    public static List<LocationDTO> findLocations(LocationRequest input) throws IOException {
+    public static List<LocationDTO> findLocations(LocationRequest input, String url, String db) throws IOException {
         String input_object = input.getInput();
-
-        List<LocationDTO> listLocation = getListLocations();
-        List<LocationDTO> findLocation = new ArrayList<>();
-        // Xóa khoảng trắng đầu và cuối chuỗi
         String input_trim = input_object.trim();
         String input_format = input_trim;
         if (input_trim.contains("  "))
             input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
-        if (input_format.equals(" "))
-            findLocation = listLocation;
-        for (LocationDTO location : listLocation) {
-            if (String.format("%d", location.getId()).toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getName().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getRegion().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getCountry().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (String.format("%f", location.getLat()).toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (String.format("%f", location.getLon()).contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getUrl().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
+        List<LocationDTO> listLocation = new ArrayList<>();
+        try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+            MongoCollection<Document> collection = database.getCollection("Locations");
+            Bson filters = Filters.or(
+                    Filters.regex("name", input_format,"$i"),
+                    Filters.regex("country", input_format,"$i"),
+                    Filters.regex("region", input_format,"$i"),
+                    Filters.regex("lat", input_format),
+                    Filters.regex("lon", input_format),
+                    Filters.regex("url", input_format,"$i"));
+            FindIterable<Document> myDoc = collection.find(filters);
+            if (myDoc.first()==null) {
+                logger.error("location không tìm thấy");
+            } else {
+                for (Document doc : myDoc) {
+                    LocationDTO locationDTO = new LocationDTO();
+                    locationDTO.setId(Integer.parseInt(doc.get("id").toString()));
+                    locationDTO.setName(doc.get("name").toString());
+                    locationDTO.setCountry(doc.get("country").toString());
+                    locationDTO.setRegion(doc.get("region").toString());
+                    locationDTO.setLat(doc.get("lat").toString());
+                    locationDTO.setLon(doc.get("lon").toString());
+                    locationDTO.setUrl(doc.get("url").toString());
+                    listLocation.add(locationDTO);
+                }
             }
+        } catch (Exception e) {
+            logger.error("Không thể kết nối");
+            logger.error("getListLocations, url: " + url);
         }
-        return findLocation;
+        return listLocation;
     }
 
     // Export file Json for Locations
     //@PostMapping(value = "/exportJsonLocations")
-    public static List<LocationDTO> exportJsonLocations(LocationRequest input) throws IOException {
-        String input_object = input.getInput();
+    public static List<LocationDTO> exportJsonLocations(LocationRequest input, String url, String db) throws IOException {
+        //String input_object = input.getInput();
 
         // Get list locations
-        List<LocationDTO> listLocation = findLocations(input);
+        List<LocationDTO> listLocation = findLocations(input, url, db);
         if (listLocation == null)
             logger.error("Export Json Locations: ListLocation is null");
         // Create a JsonArray
@@ -271,7 +268,7 @@ public class LocationService {
         try {
             //Gson gson = new Gson();
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            LocationDTO[] locationDTO = gson.fromJson(listJsonObject.toString(), LocationDTO[].class);
+            List< LocationDTO> locationDTO = List.of(gson.fromJson(listJsonObject.toString(), LocationDTO[].class));
             String prettyJsonString = gson.toJson(locationDTO);
             // Create one file
             FileWriter file = new FileWriter("D:/location.json");
@@ -290,9 +287,9 @@ public class LocationService {
 
     // Export file excel for locations
     //@PostMapping(value = "/exportExcelLocations")
-    public static List<LocationDTO> exportExcelLocations(LocationRequest input) throws IOException {
+    public static List<LocationDTO> exportExcelLocations(LocationRequest input, String url, String db) throws IOException {
         //List<LocationDTO> listLocation = getListLocations();
-        List<LocationDTO> listLocation = findLocations(input);
+        List<LocationDTO> listLocation = findLocations(input, url, db);
         if (listLocation == null)
             logger.error("Export Excel Location: ListLocation không có data");
         try {
@@ -324,10 +321,10 @@ public class LocationService {
         return listLocation;
     }
 
-    public static List<LocationDTO> testfindLocations(LocationRequest input) throws IOException {
+    public static List<LocationDTO> testfindLocations(LocationRequest input, String url, String db) throws IOException {
         String input_object = input.getInput();
 
-        List<LocationDTO> listLocation = getListLocations();
+        List<LocationDTO> listLocation = getListLocations(url, db);
         List<LocationDTO> findLocation = new ArrayList<>();
         // Xóa khoảng trắng đầu và cuối chuỗi
         String input_trim = input_object.trim();
@@ -356,10 +353,43 @@ public class LocationService {
         return findLocation;
     }
 
-    public MongoDatabase getDatabase() {
-        String uri = "mongodb://localhost:27017";
-        MongoClient mongoClient = MongoClients.create(uri);
-        MongoDatabase database = mongoClient.getDatabase("all_things");
-        return database;
+    public static List<LocationDTO> testGetListLocations(LocationRequest input, String url, String db) {
+        String input_object = input.getInput();
+        String input_trim = input_object.trim();
+        String input_format = input_trim;
+        if (input_trim.contains("  "))
+            input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
+        List<LocationDTO> listLocation = new ArrayList<>();
+        try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+            MongoCollection<Document> collection = database.getCollection("Locations");
+            Bson filters = Filters.or(
+                    Filters.regex("name", input_format,"$i"),
+                    Filters.regex("country", input_format,"$i"),
+                    Filters.regex("region", input_format,"$i"),
+                    Filters.regex("lat", input_format),
+                    Filters.regex("lon", input_format),
+                    Filters.regex("url", input_format,"$i"));
+            FindIterable<Document> myDoc = collection.find(filters);
+            if (myDoc.first()==null) {
+                logger.error("location không tìm thấy");
+            } else {
+                for (Document doc : myDoc) {
+                    LocationDTO locationDTO = new LocationDTO();
+                    locationDTO.setId(Integer.parseInt(doc.get("id").toString()));
+                    locationDTO.setName(doc.get("name").toString());
+                    locationDTO.setCountry(doc.get("country").toString());
+                    locationDTO.setRegion(doc.get("region").toString());
+                    locationDTO.setLat(doc.get("lat").toString());
+                    locationDTO.setLon(doc.get("lon").toString());
+                    locationDTO.setUrl(doc.get("url").toString());
+                    listLocation.add(locationDTO);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Không thể kết nối");
+            logger.error("getListLocations, url: " + url);
+        }
+        return listLocation;
     }
 }

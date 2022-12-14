@@ -1,28 +1,33 @@
 package com.example.Lab2.weathers.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 
 public class WeatherRequest {
 
-    @NotNull(message = "datetime_range không được null")
-    private String datetime_range;
 
-    @NotNull(message = "location_id không được null")
-    private String location_id;
+    @JsonProperty("datetime_range")
+    @NotBlank(message = "datetime_range không được null")
+    private String datetimeRange;
+    @JsonProperty("location_id")
+    @NotBlank(message = "location_id không được null")
+    private String locationId;
 
-    public String getDatetime_range() {
-        return datetime_range;
+    public String getDatetimeRange() {
+        return datetimeRange;
     }
 
-    public void setDatetime_range(String datetime_range) {
-        this.datetime_range = datetime_range;
+    public void setDatetimeRange(String datetimeRange) {
+        this.datetimeRange = datetimeRange;
     }
 
-    public String getLocation_id() {
-        return location_id;
+    public String getLocationId() {
+        return locationId;
     }
 
-    public void setLocation_id(String location_id) {
-        this.location_id = location_id;
+    public void setLocationId(String locationId) {
+        this.locationId = locationId;
     }
 }

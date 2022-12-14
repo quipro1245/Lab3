@@ -1,18 +1,20 @@
 package com.example.Lab2.weathers.service;
 
+import com.example.Lab2.controller.ConnectionMongoDB;
 import com.example.Lab2.weathers.models.WeatherDTO;
 import com.example.Lab2.weathers.models.WeatherRequest;
-import com.example.Lab2.controller.ConnectionMongoDB;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -76,13 +78,12 @@ public class WeatherService {
             MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, "all_things");
             MongoCollection<Document> collection = database.getCollection(String.format("Weather_%s", date));
             FindIterable<Document> myDoc = collection.find();
-
             if (myDoc == null) {
                 logger.error("Get list weather không tìm thấy");
             } else {
                 for (Document doc : myDoc) {
                     WeatherDTO weatherDTO = new WeatherDTO();
-                    weatherDTO.setId(Integer.parseInt(doc.get("id").toString()));
+                    weatherDTO.setId(doc.get("id").toString());
                     weatherDTO.setTime_epoch(Integer.parseInt(doc.get("time_epoch").toString()));
                     weatherDTO.setTime(doc.get("time").toString());
                     weatherDTO.setTemp_c(Double.parseDouble(doc.get("temp_c").toString()));
@@ -160,21 +161,19 @@ public class WeatherService {
 
     //@PostMapping(value = "/findWeatherFollowDate")
     public static List<WeatherDTO> findWeatherFollowDate(WeatherRequest input) {
-        String startDate;
-        String endDate;
+        String startDate = "";
+        String endDate = "";
         String[] location_id_arr = null;
-        String datetime_range_Object = input.getDatetime_range();
-        String location_id_Object = input.getLocation_id();
+        String datetime_range_Object = input.getDatetimeRange();
+        String location_id_Object = input.getLocationId();
         List<WeatherDTO> listWeatherDTO;
         List<WeatherDTO> findWeatherFollowDate = new ArrayList<>();
-        if (datetime_range_Object.trim().equals("")) {
-            startDate = "";
-            endDate = "";
+        if (datetime_range_Object.trim().isBlank()) {
+            logger.error("Find weather follow date: datetime_range không có giá trị");
         } else {
             String[] datetime_range_arr = datetime_range_Object.split("-");
-            if (datetime_range_arr.length < 2) {
-                startDate = datetime_range_arr[0];
-                endDate = "";
+            if (datetime_range_arr.length < 2 || datetime_range_arr.length > 2) {
+                logger.error("Find weather follow date: datetime_range không đúng định dạng");
             } else {
                 startDate = datetime_range_arr[0];
                 endDate = datetime_range_arr[1];
@@ -187,26 +186,8 @@ public class WeatherService {
         }
         try {
             // Trường hợp datetime_range có giá trị 1 trong 2 hoặc cả 2 bị null
-            if (startDate.trim().equals("") || endDate.trim().equals("")) {
-//                // Cả ngày bắt đầu và kết thúc bị null
-//                if (startDate.trim().equals("") && endDate.trim().equals("")) {
-//                    listWeatherDTO = getListWeatherStartToEndDate("01/09/2022 00:00:00", "31/10/2022 23:00:00");
-//                } else if (startDate.trim().equals("")) { // Ngày bắt đầu bị null
-//                    listWeatherDTO = getListWeatherStartToEndDate("01/09/2022 00:00:00", endDate);
-//                } else { // Ngày kết thúc bị null
-//                    listWeatherDTO = getListWeatherStartToEndDate(startDate, "31/10/2022 23:00:00");
-//                }
-//                for (WeatherDTO weather : listWeatherDTO) {
-//                    if (location_id_arr == null) {
-//                        findWeatherFollowDate.add(weather);
-//                    } else {
-//                        for (String itemLocationID : location_id_arr) {
-//                            if (weather.getId() == Integer.parseInt(itemLocationID.trim())) {
-//                                findWeatherFollowDate.add(weather);
-//                            }
-//                        }
-//                    }
-//                }
+            if (startDate.isBlank() || endDate.isBlank()) {
+
                 logger.error("Find weather follow date: datetime_range không được bỏ trống và nhập đúng định dạng dd/MM/yyyy HH:mm:ss - dd/MM/yyyy HH:mm:ss");
             } else {
                 listWeatherDTO = getListWeatherStartToEndDate(startDate, endDate);
@@ -219,7 +200,7 @@ public class WeatherService {
                     } else {
                         // Trường hợp location có giá trị
                         for (String itemLocationID : location_id_arr) {
-                            if (weather.getId() == Integer.parseInt(itemLocationID)) {
+                            if (weather.getId() == itemLocationID) {
                                 if (compareItemTimeWeatherWithDateTime_range(startDate, endDate, weather.getTime()))
                                     findWeatherFollowDate.add(weather);
                             }
@@ -582,5 +563,99 @@ public class WeatherService {
             logger.error("Export Excel Location: Lỗi tạo file excel " + excelFilePath);
         }
         return listWeather;
+    }
+
+    public static List<WeatherDTO> findWeatherFollowRequest(WeatherRequest input, String url, String db) {
+        String startDate = "";
+        String endDate = "";
+        String[] datetimeRange;
+        String locationId = input.getLocationId().trim();
+        locationId = locationId.replaceAll(" ", "");
+        String[] arrLocation = locationId.split(",");
+        if (input.getDatetimeRange().isBlank()) {
+            logger.error("Test get list weather: get datetime_range is null");
+        } else {
+            datetimeRange = input.getDatetimeRange().split("-");
+            if (datetimeRange.length < 2 || datetimeRange.length > 2) {
+                logger.error("Test get list weather: get datetime_range length lớn hoặc nhỏ hơn 2");
+            } else {
+                startDate = datetimeRange[0].trim();
+                endDate = datetimeRange[1].trim();
+            }
+        }
+        if (input.getLocationId().isBlank()) {
+            logger.error("Test get list weather: get location_id is null");
+        } else {
+            arrLocation = locationId.split(",");
+        }
+        LocalDateTime dateTimeStartDate = LocalDateTime.parse(startDate.trim(), formatter);
+        LocalDateTime dateTimeEndDate = LocalDateTime.parse(endDate.trim(), formatter);
+        startDate = dateTimeStartDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        endDate = dateTimeEndDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
+        System.out.println(startDate);
+        String date = "20220901";
+        //String url = "mongodb://localhost:27017";
+        List<WeatherDTO> listLocation = new ArrayList<>();
+        Bson filters = Filters.and(
+                Filters.gte("time", startDate),
+                Filters.lte("time", endDate),
+                Filters.in("id", arrLocation)
+        );
+        LocalDateTime dateTimeTmp = dateTimeStartDate;
+        while (dateTimeTmp.compareTo(dateTimeEndDate) <= 0) {
+            try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+                MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+                MongoCollection<Document> collection = database.getCollection(String.format("Weather_%s", dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
+                FindIterable<Document> myDoc = collection.find(filters);
+
+                if (myDoc == null) {
+                    logger.error("Get list weather không tìm thấy");
+                } else {
+                    for (Document doc : myDoc) {
+                        WeatherDTO weatherDTO = new WeatherDTO();
+                        weatherDTO.setId(doc.get("id").toString());
+                        weatherDTO.setTime_epoch(Integer.parseInt(doc.get("time_epoch").toString()));
+                        weatherDTO.setTime(doc.get("time").toString());
+                        weatherDTO.setTemp_c(Double.parseDouble(doc.get("temp_c").toString()));
+                        weatherDTO.setTemp_f(Double.parseDouble(doc.get("temp_f").toString()));
+                        weatherDTO.setIs_day(Integer.parseInt(doc.get("is_day").toString()));
+                        weatherDTO.setCondition(doc.get("condition"));
+                        weatherDTO.setWind_mph(Double.parseDouble(doc.get("wind_mph").toString()));
+                        weatherDTO.setWind_kph(Double.parseDouble(doc.get("wind_kph").toString()));
+                        weatherDTO.setWind_degree(Integer.parseInt(doc.get("wind_degree").toString()));
+                        weatherDTO.setWind_dir(doc.get("wind_dir").toString());
+                        weatherDTO.setPressure_mb(Double.parseDouble(doc.get("pressure_mb").toString()));
+                        weatherDTO.setPressure_in(Double.parseDouble(doc.get("pressure_in").toString()));
+                        weatherDTO.setPrecip_mm(Double.parseDouble(doc.get("precip_mm").toString()));
+                        weatherDTO.setPrecip_in(Double.parseDouble(doc.get("precip_in").toString()));
+                        weatherDTO.setHumidity(Integer.parseInt(doc.get("humidity").toString()));
+                        weatherDTO.setCloud(Integer.parseInt(doc.get("cloud").toString()));
+                        weatherDTO.setFeelslike_c(Double.parseDouble(doc.get("feelslike_c").toString()));
+                        weatherDTO.setFeelslike_f(Double.parseDouble(doc.get("feelslike_f").toString()));
+                        weatherDTO.setWindchill_c(Double.parseDouble(doc.get("windchill_c").toString()));
+                        weatherDTO.setWindchill_f(Double.parseDouble(doc.get("windchill_f").toString()));
+                        weatherDTO.setHeatindex_c(Double.parseDouble(doc.get("heatindex_c").toString()));
+                        weatherDTO.setHeatindex_f(Double.parseDouble(doc.get("heatindex_f").toString()));
+                        weatherDTO.setDewpoint_c(Double.parseDouble(doc.get("dewpoint_c").toString()));
+                        weatherDTO.setDewpoint_f(Double.parseDouble(doc.get("dewpoint_f").toString()));
+                        weatherDTO.setWill_it_rain(Integer.parseInt(doc.get("will_it_rain").toString()));
+                        weatherDTO.setChance_of_rain(Integer.parseInt(doc.get("chance_of_rain").toString()));
+                        weatherDTO.setWill_it_snow(Integer.parseInt(doc.get("will_it_snow").toString()));
+                        weatherDTO.setChance_of_snow(Integer.parseInt(doc.get("chance_of_snow").toString()));
+                        weatherDTO.setVis_km(Double.parseDouble(doc.get("vis_km").toString()));
+                        weatherDTO.setVis_miles(Double.parseDouble(doc.get("vis_miles").toString()));
+                        weatherDTO.setGust_mph(Double.parseDouble(doc.get("gust_mph").toString()));
+                        weatherDTO.setGust_kph(Double.parseDouble(doc.get("gust_kph").toString()));
+
+                        listLocation.add(weatherDTO);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error(String.format("Get list weather: Không thể lấy được data url: %s, date: %s", url, date));
+            }
+            dateTimeTmp = dateTimeTmp.plusDays(1);
+        }
+        return listLocation;
     }
 }

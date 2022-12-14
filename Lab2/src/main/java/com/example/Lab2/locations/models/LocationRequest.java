@@ -1,10 +1,11 @@
 package com.example.Lab2.locations.models;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class LocationRequest {
 
-    @NotNull(message = "input không được bỏ trống")
+    @NotBlank(message = "input không được bỏ trống")
     private String input;
 
     public String getInput() {
