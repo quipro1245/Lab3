@@ -28,32 +28,32 @@ public class WeatherController {
     @Autowired
     MongoConfig mongoConfig;
 
-    @PostMapping(value = "/postWeather")
-    public List<WeatherDTO> postListWeather(@RequestBody String date) {
-        return WeatherService.getListWeather(date);
-    }
+//    @PostMapping(value = "/postWeather")
+//    public List<WeatherDTO> postListWeather(@RequestBody String date) {
+//        return WeatherService.getListWeather(date);
+//    }
 
-    @PostMapping(value = "/findWeatherFollowDate")
-    public ResponseEntity<Response> findWeatherFollowDate(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
-        Response weatherResponse = new Response();
-        if (bindingResult.hasErrors()) {
-
-            logger.error("Find weather follow date: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
-            weatherResponse.setStatus("400");
-            ArrayList message = new ArrayList<>();
-            for (ObjectError error : bindingResult.getAllErrors()) {
-                message.add(error.getDefaultMessage());
-            }
-            weatherResponse.setMessage("ERROR: find weather: " + message);
-            return ResponseEntity.badRequest().body(weatherResponse);
-        }
-
-        //return WeatherService.findWeatherFollowDate(input);
-        weatherResponse.setStatus("200");
-        weatherResponse.setResult(WeatherService.findWeatherFollowDate(input));
-        weatherResponse.setMessage("Success");
-        return ResponseEntity.ok(weatherResponse);
-    }
+//    @PostMapping(value = "/findWeatherFollowDate")
+//    public ResponseEntity<Response> findWeatherFollowDate(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
+//        Response weatherResponse = new Response();
+//        if (bindingResult.hasErrors()) {
+//
+//            logger.error("Find weather follow date: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+//            weatherResponse.setStatus("400");
+//            ArrayList message = new ArrayList<>();
+//            for (ObjectError error : bindingResult.getAllErrors()) {
+//                message.add(error.getDefaultMessage());
+//            }
+//            weatherResponse.setMessage("ERROR: find weather: " + message);
+//            return ResponseEntity.badRequest().body(weatherResponse);
+//        }
+//
+//        //return WeatherService.findWeatherFollowDate(input);
+//        weatherResponse.setStatus("200");
+//        weatherResponse.setResult(WeatherService.findWeatherFollowDate(input));
+//        weatherResponse.setMessage("Success");
+//        return ResponseEntity.ok(weatherResponse);
+//    }
 
     @PostMapping(value = "/exportJsonWeather")
     public ResponseEntity<Response> exportJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
@@ -62,13 +62,18 @@ public class WeatherController {
 
             logger.error("Export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            ArrayList message = new ArrayList<>();
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                message.add(error.getDefaultMessage());
+            }
+            weatherResponse.setMessage("ERROR, export json weather: " + message);
+            //weatherResponse.setMessage("ERROR: export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             return ResponseEntity.badRequest().body(weatherResponse);
         }
         //return WeatherService.exportJsonWeather(input);
 
         weatherResponse.setStatus("200");
-        weatherResponse.setResult(WeatherService.exportJsonWeather(input));
+        weatherResponse.setResult(WeatherService.exportJsonWeather(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         weatherResponse.setMessage("Success");
         return ResponseEntity.ok(weatherResponse);
     }
@@ -80,30 +85,39 @@ public class WeatherController {
 
             logger.error("Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            ArrayList message = new ArrayList<>();
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                message.add(error.getDefaultMessage());
+            }
+            weatherResponse.setMessage("ERROR, export excel weather: " + message);
+            //weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             return ResponseEntity.badRequest().body(weatherResponse);
         }
         //return  WeatherService.exportExcelWeather(input);
         weatherResponse.setStatus("200");
-        weatherResponse.setResult(WeatherService.exportExcelWeather(input));
+        weatherResponse.setResult(WeatherService.exportExcelWeather(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         weatherResponse.setMessage("Success");
 
         return ResponseEntity.ok(weatherResponse);
     }
-    @PostMapping(value = "/testGetListWeather")
-    public ResponseEntity<Response> testGetListWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult ) {
+    @PostMapping(value = "/findWeatherFollowRequest")
+    public ResponseEntity<Response> findWeatherFollowRequest(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult ) {
 
         Response weatherResponse = new Response();
         if (bindingResult.hasErrors()) {
 
             logger.error("Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            ArrayList message = new ArrayList<>();
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                message.add(error.getDefaultMessage());
+            }
+            weatherResponse.setMessage("ERROR, find weather follow request: " + message);
+            //weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             return ResponseEntity.badRequest().body(weatherResponse);
         }
-        //return  WeatherService.exportExcelWeather(input);
         weatherResponse.setStatus("200");
-        weatherResponse.setResult(WeatherService.findWeatherFollowRequest(input,mongoConfig.getUrl(), mongoConfig.getDb()));
+        weatherResponse.setResult(WeatherService.findWeatherFollowRequest(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         weatherResponse.setMessage("Success");
 
         return ResponseEntity.ok(weatherResponse);

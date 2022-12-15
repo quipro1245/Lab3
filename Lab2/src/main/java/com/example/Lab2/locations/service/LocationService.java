@@ -19,9 +19,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.springframework.core.io.Resource;
+import org.springframework.util.ObjectUtils;
 
 import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class LocationService {
@@ -46,7 +51,6 @@ public class LocationService {
         } else {
             throw new IllegalArgumentException("The specified file is not Excel file");
         }
-
         return workbook;
     }
 
@@ -152,7 +156,7 @@ public class LocationService {
     }
 
     // Auto resize column width
-    public static void autosizeColumn(Sheet sheet, int lastColumn) {
+    public static void autoSizeColumn(Sheet sheet, int lastColumn) {
         for (int columnIndex = 0; columnIndex < lastColumn; columnIndex++) {
             sheet.autoSizeColumn(columnIndex);
         }
@@ -165,7 +169,6 @@ public class LocationService {
             workbook.write(os);
         } catch (Exception e) {
             logger.error("Create Output File: " + e);
-
         }
     }
 
@@ -183,7 +186,7 @@ public class LocationService {
             } else {
                 for (Document doc : myDoc) {
                     LocationDTO locationDTO = new LocationDTO();
-                    locationDTO.setId(Integer.parseInt(doc.get("id").toString()));
+                    locationDTO.setId(doc.get("id").toString());
                     locationDTO.setName(doc.get("name").toString());
                     locationDTO.setCountry(doc.get("country").toString());
                     locationDTO.setRegion(doc.get("region").toString());
@@ -200,43 +203,46 @@ public class LocationService {
         return listLocation;
     }
 
+    // Find Location follow request
     //@PostMapping(value = "/postFindLocations")
-    public static List<LocationDTO> findLocations(LocationRequest input, String url, String db) throws IOException {
-        String input_object = input.getInput();
-        String input_trim = input_object.trim();
-        String input_format = input_trim;
-        if (input_trim.contains("  "))
-            input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
+    public static List<LocationDTO> findLocations(LocationRequest input, String url, String db) {
+
+        String inputTrim = input.getInput().trim();
+        String inputFormat = inputTrim;
+        if (inputTrim.contains("  "))
+            inputFormat = inputTrim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
         List<LocationDTO> listLocation = new ArrayList<>();
         try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
             MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
             MongoCollection<Document> collection = database.getCollection("Locations");
             Bson filters = Filters.or(
-                    Filters.regex("name", input_format,"$i"),
-                    Filters.regex("country", input_format,"$i"),
-                    Filters.regex("region", input_format,"$i"),
-                    Filters.regex("lat", input_format),
-                    Filters.regex("lon", input_format),
-                    Filters.regex("url", input_format,"$i"));
+                    Filters.regex("name", inputFormat,"$i"),
+                    Filters.regex("country", inputFormat,"$i"),
+                    Filters.regex("region", inputFormat,"$i"),
+                    Filters.regex("lat", inputFormat),
+                    Filters.regex("lon", inputFormat),
+                    Filters.regex("url", inputFormat,"$i"));
             FindIterable<Document> myDoc = collection.find(filters);
             if (myDoc.first()==null) {
-                logger.error("location không tìm thấy");
+                logger.error(String.format("Find Location: location không tìm thấy theo request: ,input: %s, url: %s, db: %s " ,input.getInput(), url, db));
             } else {
                 for (Document doc : myDoc) {
                     LocationDTO locationDTO = new LocationDTO();
-                    locationDTO.setId(Integer.parseInt(doc.get("id").toString()));
-                    locationDTO.setName(doc.get("name").toString());
-                    locationDTO.setCountry(doc.get("country").toString());
-                    locationDTO.setRegion(doc.get("region").toString());
-                    locationDTO.setLat(doc.get("lat").toString());
-                    locationDTO.setLon(doc.get("lon").toString());
-                    locationDTO.setUrl(doc.get("url").toString());
+
+                    locationDTO.setId(ObjectUtils.isEmpty(doc.get("id"))?"":doc.get("id").toString());
+                    locationDTO.setName(ObjectUtils.isEmpty(doc.get("name"))?"":doc.get("name").toString());
+                    locationDTO.setCountry(ObjectUtils.isEmpty(doc.get("country"))?"":doc.get("country").toString());
+                    locationDTO.setRegion(ObjectUtils.isEmpty(doc.get("region"))?"":doc.get("region").toString());
+                    locationDTO.setLat(ObjectUtils.isEmpty(doc.get("lat"))?"":doc.get("lat").toString());
+                    locationDTO.setLon(ObjectUtils.isEmpty(doc.get("lon"))?"":doc.get("lon").toString());
+                    locationDTO.setUrl(ObjectUtils.isEmpty(doc.get("url"))?"":doc.get("url").toString());
                     listLocation.add(locationDTO);
                 }
             }
         } catch (Exception e) {
-            logger.error("Không thể kết nối");
-            logger.error("getListLocations, url: " + url);
+            logger.error("Find location, Không thể kết nối Exception: "+e);
+            logger.error(String.format("Find location,input: %s, url: %s, db: %s " ,input.getInput(), url, db));
+
         }
         return listLocation;
     }
@@ -244,51 +250,111 @@ public class LocationService {
     // Export file Json for Locations
     //@PostMapping(value = "/exportJsonLocations")
     public static List<LocationDTO> exportJsonLocations(LocationRequest input, String url, String db) throws IOException {
-        //String input_object = input.getInput();
-
+        // Get Current Directory using getAbsolutePath()
         // Get list locations
         List<LocationDTO> listLocation = findLocations(input, url, db);
-        if (listLocation == null)
+        if (listLocation.isEmpty())
             logger.error("Export Json Locations: ListLocation is null");
         // Create a JsonArray
-        JSONArray listJsonObject = new JSONArray();
-        for (LocationDTO location : listLocation) {
-            //Creating a JSONObject object
-            JSONObject jsonObject = new JSONObject();
-            //Inserting key-value pairs into the json object
-            jsonObject.put("id", location.getId());
-            jsonObject.put("name", location.getName());
-            jsonObject.put("region", location.getRegion());
-            jsonObject.put("country", location.getCountry());
-            jsonObject.put("lat", location.getLat());
-            jsonObject.put("lon", location.getLon());
-            jsonObject.put("url", location.getUrl());
-            listJsonObject.add(jsonObject);
-        }
-        try {
-            //Gson gson = new Gson();
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            List< LocationDTO> locationDTO = List.of(gson.fromJson(listJsonObject.toString(), LocationDTO[].class));
-            String prettyJsonString = gson.toJson(locationDTO);
-            // Create one file
-            FileWriter file = new FileWriter("D:/location.json");
-            // Writing file
-            file.write(prettyJsonString);
-            //System.out.println(listJsonObject.toString());
-            file.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+//        JSONArray listJsonObject = new JSONArray();
+//        for (LocationDTO location : listLocation) {
+//            //Creating a JSONObject object
+//            JSONObject jsonObject = new JSONObject();
+//            //Inserting key-value pairs into the json object
+//            jsonObject.put("id", location.getId());
+//            jsonObject.put("name", location.getName());
+//            jsonObject.put("region", location.getRegion());
+//            jsonObject.put("country", location.getCountry());
+//            jsonObject.put("lat", location.getLat());
+//            jsonObject.put("lon", location.getLon());
+//            jsonObject.put("url", location.getUrl());
+//            listJsonObject.add(jsonObject);
+//        }
+        else {
+            try {
+                //Gson gson = new Gson();
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                //List< LocationDTO> locationDTO = List.of(gson.fromJson(listJsonObject.toString(), LocationDTO[].class));
+                String prettyJsonString = gson.toJson(listLocation);
+                // Create one file
+                File file = new File("./export");
+                if (!file.exists()){
+                    file.mkdirs();
+                }
+                String currentDirectory = file.getAbsolutePath();
+                //currentDirectory = currentDirectory.replaceAll("\"","//");
+                LocalDateTime localDateTime = LocalDateTime.now();
+                FileWriter fileWriter = new FileWriter(file.getName()+"/location"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json");
+                // Writing file
+
+                fileWriter.write(prettyJsonString);
+                //System.out.println(listJsonObject.toString());
+                fileWriter.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                logger.error("Export Json Locations: IOException "+e);
+            } catch (Exception e) {
+                logger.error("Export Json Locations: Exception "+e);
+            }
         }
         return listLocation;
     }
+    public static String exportDownloadJsonLocations(LocationRequest input, String url, String db) throws IOException {
+        // Get Current Directory using getAbsolutePath()
+        // Get list locations
+        String fileName = null;
+        List<LocationDTO> listLocation = findLocations(input, url, db);
+        if (listLocation.isEmpty())
+            logger.error("Export Json Locations: ListLocation is null");
+            // Create a JsonArray
+//        JSONArray listJsonObject = new JSONArray();
+//        for (LocationDTO location : listLocation) {
+//            //Creating a JSONObject object
+//            JSONObject jsonObject = new JSONObject();
+//            //Inserting key-value pairs into the json object
+//            jsonObject.put("id", location.getId());
+//            jsonObject.put("name", location.getName());
+//            jsonObject.put("region", location.getRegion());
+//            jsonObject.put("country", location.getCountry());
+//            jsonObject.put("lat", location.getLat());
+//            jsonObject.put("lon", location.getLon());
+//            jsonObject.put("url", location.getUrl());
+//            listJsonObject.add(jsonObject);
+//        }
+        else {
+            try {
+                //Gson gson = new Gson();
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                //List< LocationDTO> locationDTO = List.of(gson.fromJson(listJsonObject.toString(), LocationDTO[].class));
+                String prettyJsonString = gson.toJson(listLocation);
+                // Create one file
+                File file = new File("./export");
+                if (!file.exists()){
+                    file.mkdirs();
+                }
+                LocalDateTime localDateTime = LocalDateTime.now();
+                String currentDirectory = file.getName()+"/location"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json";
+                //currentDirectory = currentDirectory.replaceAll("\"","//");
 
+                System.out.println(currentDirectory);
+                FileWriter fileWriter = new FileWriter(currentDirectory);
+                // Writing file
+                fileWriter.write(prettyJsonString);
+                //System.out.println(listJsonObject.toString());
+                fileWriter.close();
+                fileName = currentDirectory;
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                logger.error("Export Json Locations: IOException "+e);
+            } catch (Exception e) {
+                logger.error("Export Json Locations: Exception "+e);
+            }
+        }
+        return fileName;
+    }
     // Export file excel for locations
     //@PostMapping(value = "/exportExcelLocations")
     public static List<LocationDTO> exportExcelLocations(LocationRequest input, String url, String db) throws IOException {
-        //List<LocationDTO> listLocation = getListLocations();
         List<LocationDTO> listLocation = findLocations(input, url, db);
         if (listLocation == null)
             logger.error("Export Excel Location: ListLocation không có data");
@@ -311,7 +377,7 @@ public class LocationService {
             }
             // Auto resize column witdth
             int numberOfColumn = sheet.getRow(0).getPhysicalNumberOfCells();
-            autosizeColumn(sheet, numberOfColumn);
+            autoSizeColumn(sheet, numberOfColumn);
             // Create file excel
             createOutputFile(workbook, excelFilePath);
             logger.info("Export Excel Location: Done!!!");
@@ -321,75 +387,75 @@ public class LocationService {
         return listLocation;
     }
 
-    public static List<LocationDTO> testfindLocations(LocationRequest input, String url, String db) throws IOException {
-        String input_object = input.getInput();
+//    public static List<LocationDTO> testFindLocations(LocationRequest input, String url, String db) throws IOException {
+//        String input_object = input.getInput();
+//
+//        List<LocationDTO> listLocation = getListLocations(url, db);
+//        List<LocationDTO> findLocation = new ArrayList<>();
+//        // Xóa khoảng trắng đầu và cuối chuỗi
+//        String input_trim = input_object.trim();
+//        String input_format = input_trim;
+//        if (input_trim.contains("  "))
+//            input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
+//        if (input_format.equals(" "))
+//            findLocation = listLocation;
+//        for (LocationDTO location : listLocation) {
+//            if (String.format("%d", location.getId()).toLowerCase().contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            } else if (location.getName().toLowerCase().contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            } else if (location.getRegion().toLowerCase().contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            } else if (location.getCountry().toLowerCase().contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            } else if (String.format("%f", location.getLat()).toLowerCase().contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            } else if (String.format("%f", location.getLon()).contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            } else if (location.getUrl().toLowerCase().contains(input_format.toLowerCase())) {
+//                findLocation.add(location);
+//            }
+//        }
+//        return findLocation;
+//    }
 
-        List<LocationDTO> listLocation = getListLocations(url, db);
-        List<LocationDTO> findLocation = new ArrayList<>();
-        // Xóa khoảng trắng đầu và cuối chuỗi
-        String input_trim = input_object.trim();
-        String input_format = input_trim;
-        if (input_trim.contains("  "))
-            input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
-        if (input_format.equals(" "))
-            findLocation = listLocation;
-        for (LocationDTO location : listLocation) {
-            if (String.format("%d", location.getId()).toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getName().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getRegion().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getCountry().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (String.format("%f", location.getLat()).toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (String.format("%f", location.getLon()).contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            } else if (location.getUrl().toLowerCase().contains(input_format.toLowerCase())) {
-                findLocation.add(location);
-            }
-        }
-        return findLocation;
-    }
-
-    public static List<LocationDTO> testGetListLocations(LocationRequest input, String url, String db) {
-        String input_object = input.getInput();
-        String input_trim = input_object.trim();
-        String input_format = input_trim;
-        if (input_trim.contains("  "))
-            input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
-        List<LocationDTO> listLocation = new ArrayList<>();
-        try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
-            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
-            MongoCollection<Document> collection = database.getCollection("Locations");
-            Bson filters = Filters.or(
-                    Filters.regex("name", input_format,"$i"),
-                    Filters.regex("country", input_format,"$i"),
-                    Filters.regex("region", input_format,"$i"),
-                    Filters.regex("lat", input_format),
-                    Filters.regex("lon", input_format),
-                    Filters.regex("url", input_format,"$i"));
-            FindIterable<Document> myDoc = collection.find(filters);
-            if (myDoc.first()==null) {
-                logger.error("location không tìm thấy");
-            } else {
-                for (Document doc : myDoc) {
-                    LocationDTO locationDTO = new LocationDTO();
-                    locationDTO.setId(Integer.parseInt(doc.get("id").toString()));
-                    locationDTO.setName(doc.get("name").toString());
-                    locationDTO.setCountry(doc.get("country").toString());
-                    locationDTO.setRegion(doc.get("region").toString());
-                    locationDTO.setLat(doc.get("lat").toString());
-                    locationDTO.setLon(doc.get("lon").toString());
-                    locationDTO.setUrl(doc.get("url").toString());
-                    listLocation.add(locationDTO);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Không thể kết nối");
-            logger.error("getListLocations, url: " + url);
-        }
-        return listLocation;
-    }
+//    public static List<LocationDTO> testGetListLocations(LocationRequest input, String url, String db) {
+//        String input_object = input.getInput();
+//        String input_trim = input_object.trim();
+//        String input_format = input_trim;
+//        if (input_trim.contains("  "))
+//            input_format = input_trim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
+//        List<LocationDTO> listLocation = new ArrayList<>();
+//        try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+//            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+//            MongoCollection<Document> collection = database.getCollection("Locations");
+//            Bson filters = Filters.or(
+//                    Filters.regex("name", input_format,"$i"),
+//                    Filters.regex("country", input_format,"$i"),
+//                    Filters.regex("region", input_format,"$i"),
+//                    Filters.regex("lat", input_format),
+//                    Filters.regex("lon", input_format),
+//                    Filters.regex("url", input_format,"$i"));
+//            FindIterable<Document> myDoc = collection.find(filters);
+//            if (myDoc.first()==null) {
+//                logger.error("location không tìm thấy");
+//            } else {
+//                for (Document doc : myDoc) {
+//                    LocationDTO locationDTO = new LocationDTO();
+//                    locationDTO.setId(Integer.parseInt(doc.get("id").toString()));
+//                    locationDTO.setName(doc.get("name").toString());
+//                    locationDTO.setCountry(doc.get("country").toString());
+//                    locationDTO.setRegion(doc.get("region").toString());
+//                    locationDTO.setLat(doc.get("lat").toString());
+//                    locationDTO.setLon(doc.get("lon").toString());
+//                    locationDTO.setUrl(doc.get("url").toString());
+//                    listLocation.add(locationDTO);
+//                }
+//            }
+//        } catch (Exception e) {
+//            logger.error("Không thể kết nối");
+//            logger.error("getListLocations, url: " + url);
+//        }
+//        return listLocation;
+//    }
 }
