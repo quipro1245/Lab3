@@ -1,8 +1,8 @@
-package com.example.Lab2.weathers.service;
+package com.example.lab2.weathers.service;
 
-import com.example.Lab2.controller.ConnectionMongoDB;
-import com.example.Lab2.weathers.models.WeatherDTO;
-import com.example.Lab2.weathers.models.WeatherRequest;
+import com.example.lab2.controller.ConnectionMongoDB;
+import com.example.lab2.weathers.models.WeatherDTO;
+import com.example.lab2.weathers.models.WeatherRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mongodb.client.FindIterable;
@@ -15,8 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.springframework.util.ObjectUtils;
 
 import java.io.FileWriter;
@@ -26,7 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.Lab2.locations.service.LocationService.*;
+import static com.example.lab2.locations.service.LocationService.*;
 
 public class WeatherService {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);

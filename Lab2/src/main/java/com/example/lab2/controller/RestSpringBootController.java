@@ -1,7 +1,7 @@
-package com.example.Lab2.controller;
+package com.example.lab2.controller;
 
-import com.example.Lab2.locations.models.LocationDTO;
-import com.example.Lab2.model.Weather;
+import com.example.lab2.locations.models.LocationDTO;
+import com.example.lab2.model.Weather;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;

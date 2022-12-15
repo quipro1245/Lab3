@@ -1,11 +1,10 @@
-package com.example.Lab2.weathers.controllers;
+package com.example.lab2.weathers.controllers;
 
 
-import com.example.Lab2.controller.MongoConfig;
-import com.example.Lab2.response.Response;
-import com.example.Lab2.weathers.models.WeatherDTO;
-import com.example.Lab2.weathers.models.WeatherRequest;
-import com.example.Lab2.weathers.service.WeatherService;
+import com.example.lab2.controller.MongoConfig;
+import com.example.lab2.response.Response;
+import com.example.lab2.weathers.models.WeatherRequest;
+import com.example.lab2.weathers.service.WeatherService;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 public class WeatherController {

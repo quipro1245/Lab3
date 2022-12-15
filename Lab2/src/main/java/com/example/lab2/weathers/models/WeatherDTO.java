@@ -1,13 +1,11 @@
-package com.example.Lab2.weathers.models;
+package com.example.lab2.weathers.models;
 
 
-import com.example.Lab2.weathers.service.WeatherService;
+import com.example.lab2.weathers.service.WeatherService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Document("Weather")

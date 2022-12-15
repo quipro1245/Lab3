@@ -1,13 +1,13 @@
-package com.example.Lab2.locations.controllers;
+package com.example.lab2.locations.controllers;
 
-import com.example.Lab2.controller.MongoConfig;
+import com.example.lab2.controller.MongoConfig;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import com.example.Lab2.locations.models.LocationRequest;
-import com.example.Lab2.locations.service.LocationService;
-import com.example.Lab2.response.Response;
+import com.example.lab2.locations.models.LocationRequest;
+import com.example.lab2.locations.service.LocationService;
+import com.example.lab2.response.Response;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,11 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.core.io.UrlResource;
-
 import java.io.*;
 
-import static com.example.Lab2.locations.service.LocationService.exportDownloadJsonLocations;
+import static com.example.lab2.locations.service.LocationService.exportDownloadJsonLocations;
 
 @RestController
 public class LocationController {

@@ -1,8 +1,8 @@
-package com.example.Lab2;
+package com.example.lab2;
 
-import com.example.Lab2.controller.RestSpringBootController;
-import com.example.Lab2.model.Location;
-import com.example.Lab2.repository.LocationRepository;
+import com.example.lab2.controller.RestSpringBootController;
+import com.example.lab2.model.Location;
+import com.example.lab2.repository.LocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

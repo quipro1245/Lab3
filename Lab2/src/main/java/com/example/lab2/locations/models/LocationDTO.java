@@ -1,4 +1,4 @@
-package com.example.Lab2.locations.models;
+package com.example.lab2.locations.models;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

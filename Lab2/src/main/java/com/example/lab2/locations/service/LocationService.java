@@ -1,8 +1,8 @@
-package com.example.Lab2.locations.service;
+package com.example.lab2.locations.service;
 
-import com.example.Lab2.controller.ConnectionMongoDB;
-import com.example.Lab2.locations.models.LocationDTO;
-import com.example.Lab2.locations.models.LocationRequest;
+import com.example.lab2.controller.ConnectionMongoDB;
+import com.example.lab2.locations.models.LocationDTO;
+import com.example.lab2.locations.models.LocationRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mongodb.client.FindIterable;
@@ -17,16 +17,12 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.springframework.core.io.Resource;
 import org.springframework.util.ObjectUtils;
 
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class LocationService {

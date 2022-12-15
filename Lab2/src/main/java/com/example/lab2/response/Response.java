@@ -1,4 +1,4 @@
-package com.example.Lab2.response;
+package com.example.lab2.response;
 
 import java.util.List;
 

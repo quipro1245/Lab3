@@ -1,4 +1,4 @@
-package com.example.Lab2.controller;
+package com.example.lab2.controller;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;

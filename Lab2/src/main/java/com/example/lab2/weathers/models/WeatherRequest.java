@@ -1,9 +1,7 @@
-package com.example.Lab2.weathers.models;
+package com.example.lab2.weathers.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 
 public class WeatherRequest {
 
