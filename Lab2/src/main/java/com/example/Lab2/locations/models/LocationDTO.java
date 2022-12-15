@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("Locations")
 public class LocationDTO {
     @Id
-    private int id;
+    private String id;
     private String name;
     private String region;
     private String country;
@@ -14,11 +14,11 @@ public class LocationDTO {
     private String lon;
     private String url;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
