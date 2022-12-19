@@ -2,8 +2,10 @@ package com.example.lab2.weathers.models;
 
 
 import com.example.lab2.weathers.service.WeatherService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Map;
@@ -11,54 +13,89 @@ import java.util.Map;
 @Document("Weather")
 public class WeatherDTO {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);
-    private String id;
-    private int time_epoch;
+    @JsonProperty("location_id")
+    private String locationId;
+    @JsonProperty("time_epoch")
+    private int timeEpoch;
+    @JsonProperty("time")
     private String time;
+    @JsonProperty("temp_c")
     private Double tempC;
+    @JsonProperty("temp_f")
     private Double tempF;
+    @JsonProperty("is_day")
     private int isDay;
-    private Object condition;
+    @JsonProperty("condition")
+    private ConditionDTO condition;
+    @JsonProperty("wind_mph")
     private Double windMph;
+    @JsonProperty("wind_kph")
     private Double windKph;
+
+    @JsonProperty("wind_degree")
     private int windDegree;
+
+    @JsonProperty("wind_dir")
     private String windDir;
+    @JsonProperty("pressure_mb")
     private Double pressureMb;
+    @JsonProperty("pressure_in")
     private Double pressureIn;
+    @JsonProperty("precip_mm")
     private Double precipMm;
+    @JsonProperty("precip_in")
     private Double precipIn;
+    @JsonProperty("humidity")
     private int humidity;
+    @JsonProperty("cloud")
     private int cloud;
+    @JsonProperty("feelslike_c")
     private Double feelsLikeC;
+    @JsonProperty("feelslike_f")
     private Double feelsLikeF;
+    @JsonProperty("windchill_c")
     private Double windChillC;
+    @JsonProperty("windchill_f")
     private Double windChillF;
+    @JsonProperty("heatindex_c")
     private Double heatIndexC;
+    @JsonProperty("heatindex_f")
     private Double heatIndexF;
+    @JsonProperty("dewpoint_c")
     private Double dewPointC;
+    @JsonProperty("dewpoint_f")
     private Double dewPointF;
+    @JsonProperty("will_it_rain")
     private int willItRain;
+    @JsonProperty("chance_of_rain")
     private int chanceOfRain;
+    @JsonProperty("will_it_snow")
     private int willItSnow;
+    @JsonProperty("chance_of_snow")
     private int chanceOfSnow;
+    @JsonProperty("vis_km")
     private Double visKm;
+    @JsonProperty("vis_miles")
     private Double visMiles;
+    @JsonProperty("gust_mph")
     private Double gustMph;
+    @JsonProperty("gust_kph")
     private Double gustKph;
 
-    public String getId() {
-        return id;
+    public String getLocationId() {
+        return locationId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setLocationId(String locationId) {
+        this.locationId = locationId;
     }
 
-    public int getTime_epoch() {
-        return time_epoch;
+    public int getTimeEpoch() {
+        return timeEpoch;
     }
 
-    public void setTime_epoch(int time_epoch) {
-        this.time_epoch = time_epoch;
+    public void setTimeEpoch(int timeEpoch) {
+        this.timeEpoch = timeEpoch;
     }
 
     public String getTime() {
@@ -70,18 +107,13 @@ public class WeatherDTO {
     }
 
 
-
-    public Object getCondition() {
+    public ConditionDTO getCondition() {
         return condition;
     }
 
-    public void setCondition(Object condition) {
+    public void setCondition(ConditionDTO condition) {
         this.condition = condition;
     }
-
-
-
-
 
     public int getHumidity() {
         return humidity;
@@ -315,13 +347,12 @@ public class WeatherDTO {
         this.gustKph = gustKph;
     }
 
-    public String getObjectToString(Object condition){
+    public String getObjectToString(ConditionDTO condition){
         String result ="";
         try {
-            Map<String,Object> stringObjectMap = (Map<String,Object>)condition;
-            for (String item:stringObjectMap.keySet()) {
-                result+= item+": "+stringObjectMap.get(item)+"; ";
-            }
+            result+= "text: "+condition.getText()+
+                    "; icon: "+condition.getIcon()+
+                    "; code: "+condition.getCode();
 
         }catch (Exception e){
             logger.error(""+e);

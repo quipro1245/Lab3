@@ -2,13 +2,19 @@ package com.example.lab2.weathers.controllers;
 
 
 import com.example.lab2.controller.MongoConfig;
+import com.example.lab2.locations.models.LocationRequest;
 import com.example.lab2.response.Response;
 import com.example.lab2.weathers.models.WeatherRequest;
 import com.example.lab2.weathers.service.WeatherService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -16,8 +22,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+
+import static com.example.lab2.locations.service.LocationService.exportDownloadJsonLocations;
+import static com.example.lab2.weathers.service.WeatherService.exportDownloadExcelWeather;
+import static com.example.lab2.weathers.service.WeatherService.exportDownloadJsonWeather;
 
 @RestController
 public class WeatherController {
@@ -121,5 +134,44 @@ public class WeatherController {
         return ResponseEntity.ok(weatherResponse);
 
     }
-
+    @PostMapping(value = "/exportAndDownloadJsonWeather")
+    public ResponseEntity<?> exportAndDownloadJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
+        //return  LocationService.exportJsonLocations(input);
+        Response weatherResponse = new Response();
+        if (bindingResult.hasErrors()) {
+            logger.error("Export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            weatherResponse.setStatus("400");
+            weatherResponse.setMessage("ERROR: Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(weatherResponse);
+        }
+        String fileName = exportDownloadJsonWeather(input, mongoConfig.getUrl(), mongoConfig.getDb());
+        File file = new File(fileName);
+        InputStream stream = new FileInputStream(file);
+        Resource resource = new InputStreamResource(stream);
+        String contentType = "application/json";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .body(resource);
+    }
+    @PostMapping(value = "/exportAndDownloadExcelWeather")
+    public ResponseEntity<?> exportAndDownloadExcelWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
+        //return  LocationService.exportJsonLocations(input);
+        Response weatherResponse = new Response();
+        if (bindingResult.hasErrors()) {
+            logger.error("Export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            weatherResponse.setStatus("400");
+            weatherResponse.setMessage("ERROR: Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(weatherResponse);
+        }
+        String fileName = exportDownloadExcelWeather(input, mongoConfig.getUrl(), mongoConfig.getDb());
+        File file = new File(fileName);
+        InputStream stream = new FileInputStream(file);
+        Resource resource = new InputStreamResource(stream);
+        String contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .body(resource);
+    }
 }

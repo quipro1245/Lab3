@@ -1,18 +1,30 @@
 package com.example.lab2.locations.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("Locations")
 public class LocationDTO {
     @Id
+    @JsonProperty("id")
     private String id;
+    @JsonProperty("name")
     private String name;
+    @JsonProperty("region")
     private String region;
+    @JsonProperty("country")
     private String country;
+    @JsonProperty("lat")
     private String lat;
+    @JsonProperty("lon")
     private String lon;
-    private String url;
+
+    //@Expose(serialize = false,deserialize =true)
+    @JsonProperty("url")
+    private transient String url;
 
     public String getId() {
         return id;

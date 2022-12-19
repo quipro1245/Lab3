@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 
+import static com.example.lab2.locations.service.LocationService.exportDownloadExcelLocations;
 import static com.example.lab2.locations.service.LocationService.exportDownloadJsonLocations;
 
 @RestController
@@ -149,21 +150,44 @@ public class LocationController {
         }
     }
     @PostMapping(value = "/exportAndDownloadJsonLocations")
-    public ResponseEntity<Resource> exportAndDownloadJsonLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult,HttpServletRequest request) throws IOException {
+    public ResponseEntity<?> exportAndDownloadJsonLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult,HttpServletRequest request) throws IOException {
         //return  LocationService.exportJsonLocations(input);
+        Response locationResponse = new Response();
+        if (bindingResult.hasErrors()) {
+            logger.error("Export excel locations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            locationResponse.setStatus("400");
+            locationResponse.setMessage("ERROR: Export excel locations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(locationResponse);
+        }
         String fileName = exportDownloadJsonLocations(input, mongoConfig.getUrl(), mongoConfig.getDb());
-
         File file = new File(fileName);
         InputStream  stream = new FileInputStream(file);
         Resource resource = new InputStreamResource(stream);
-        String contentType = null;
-        if (contentType == null) {
-            contentType = "application/json";
-        }
+        String contentType = "application/json";
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                 .body(resource);
-
     }
+    @PostMapping(value = "/exportAndDownloadExcelLocations")
+    public ResponseEntity<?> exportAndDownloadExcelLocations(@RequestBody @Valid LocationRequest input, BindingResult bindingResult,HttpServletRequest request) throws IOException {
+        //return  LocationService.exportJsonLocations(input);
+        Response locationResponse = new Response();
+        if (bindingResult.hasErrors()) {
+            logger.error("Export excel locations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            locationResponse.setStatus("400");
+            locationResponse.setMessage("ERROR: Export excel locations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(locationResponse);
+        }
+        String fileName = exportDownloadExcelLocations(input, mongoConfig.getUrl(), mongoConfig.getDb());
+        File file = new File(fileName);
+        InputStream  stream = new FileInputStream(file);
+        Resource resource = new InputStreamResource(stream);
+        String contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .body(resource);
+    }
+
 }

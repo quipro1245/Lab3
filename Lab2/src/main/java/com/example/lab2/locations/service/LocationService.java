@@ -1,6 +1,7 @@
 package com.example.lab2.locations.service;
 
 import com.example.lab2.controller.ConnectionMongoDB;
+import com.example.lab2.controller.ExportExcel;
 import com.example.lab2.locations.models.LocationDTO;
 import com.example.lab2.locations.models.LocationRequest;
 import com.google.gson.Gson;
@@ -20,6 +21,7 @@ import org.bson.conversions.Bson;
 import org.springframework.util.ObjectUtils;
 
 import java.io.*;
+import java.lang.reflect.Modifier;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,42 +39,12 @@ public class LocationService {
     private static final String excelFilePath = "D:/locations.xlsx";
 
     // Create workbook
-    public static Workbook getWorkbook(String excelFilePath) throws IOException {
-        Workbook workbook = null;
 
-        if (excelFilePath.endsWith("xlsx")) {
-            workbook = new XSSFWorkbook();
-        } else if (excelFilePath.endsWith("xls")) {
-            workbook = new HSSFWorkbook();
-        } else {
-            throw new IllegalArgumentException("The specified file is not Excel file");
-        }
-        return workbook;
-    }
-
-    // Create CellStyle for header
-    public static CellStyle createStyleForHeader(Sheet sheet) {
-        // Create font
-        Font font = sheet.getWorkbook().createFont();
-        font.setFontName("Times New Roman");
-        font.setBold(true);
-        font.setFontHeightInPoints((short) 14); // font size
-        font.setColor(IndexedColors.WHITE.getIndex()); // text color
-
-        // Create CellStyle
-        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
-        cellStyle.setFont(font);
-        cellStyle.setFillForegroundColor(IndexedColors.GREEN.getIndex());
-        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        cellStyle.setBorderBottom(BorderStyle.THIN);
-        cellStyle.setAlignment(HorizontalAlignment.CENTER);
-        return cellStyle;
-    }
 
     // Write header
     public static void writeHeader(Sheet sheet, int rowIndex) {
         // create CellStyle
-        CellStyle cellStyle = createStyleForHeader(sheet);
+        CellStyle cellStyle = ExportExcel.createStyleForHeader(sheet);
         // Create row
         Row row = sheet.createRow(rowIndex);
         // Create cells
@@ -152,21 +124,7 @@ public class LocationService {
     }
 
     // Auto resize column width
-    public static void autoSizeColumn(Sheet sheet, int lastColumn) {
-        for (int columnIndex = 0; columnIndex < lastColumn; columnIndex++) {
-            sheet.autoSizeColumn(columnIndex);
-        }
-    }
 
-    // Create output file
-    public static void createOutputFile(Workbook workbook, String excelFilePath) throws IOException {
-        File file = new File(excelFilePath);
-        try (OutputStream os = new FileOutputStream(file)) {
-            workbook.write(os);
-        } catch (Exception e) {
-            logger.error("Create Output File: " + e);
-        }
-    }
 
     // Get list locations
     //@PostMapping(value = "/getLocations")
@@ -202,22 +160,23 @@ public class LocationService {
     // Find Location follow request
     //@PostMapping(value = "/postFindLocations")
     public static List<LocationDTO> findLocations(LocationRequest input, String url, String db) {
-
-        String inputTrim = input.getInput().trim();
-        String inputFormat = inputTrim;
-        if (inputTrim.contains("  "))
-            inputFormat = inputTrim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
+        String inputRequest = input.getInput();
+//        String inputTrim = input.getInput().trim();
+//        String inputFormat = inputTrim;
+//        if (inputTrim.contains("  "))
+//            inputFormat = inputTrim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
         List<LocationDTO> listLocation = new ArrayList<>();
         try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
             MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
             MongoCollection<Document> collection = database.getCollection("Locations");
             Bson filters = Filters.or(
-                    Filters.regex("name", inputFormat,"$i"),
-                    Filters.regex("country", inputFormat,"$i"),
-                    Filters.regex("region", inputFormat,"$i"),
-                    Filters.regex("lat", inputFormat),
-                    Filters.regex("lon", inputFormat),
-                    Filters.regex("url", inputFormat,"$i"));
+                    Filters.regex("name", inputRequest,"$i"),
+                    Filters.regex("country", inputRequest,"$i"),
+                    Filters.regex("region", inputRequest,"$i"),
+                    Filters.regex("lat", inputRequest),
+                    Filters.regex("lon", inputRequest)
+                    //Filters.regex("url", inputRequest,"$i")
+            );
             FindIterable<Document> myDoc = collection.find(filters);
             if (myDoc.first()==null) {
                 logger.error(String.format("Find Location: location không tìm thấy theo request: ,input: %s, url: %s, db: %s " ,input.getInput(), url, db));
@@ -249,6 +208,7 @@ public class LocationService {
         // Get Current Directory using getAbsolutePath()
         // Get list locations
         List<LocationDTO> listLocation = findLocations(input, url, db);
+
         if (listLocation.isEmpty())
             logger.error("Export Json Locations: ListLocation is null");
         // Create a JsonArray
@@ -269,8 +229,7 @@ public class LocationService {
         else {
             try {
                 //Gson gson = new Gson();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                //List< LocationDTO> locationDTO = List.of(gson.fromJson(listJsonObject.toString(), LocationDTO[].class));
+                Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithModifiers(Modifier.STATIC).create();
                 String prettyJsonString = gson.toJson(listLocation);
                 // Create one file
                 File file = new File("./export");
@@ -278,13 +237,11 @@ public class LocationService {
                     file.mkdirs();
                 }
                 String currentDirectory = file.getAbsolutePath();
-                //currentDirectory = currentDirectory.replaceAll("\"","//");
                 LocalDateTime localDateTime = LocalDateTime.now();
                 FileWriter fileWriter = new FileWriter(file.getName()+"/location"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json");
                 // Writing file
 
                 fileWriter.write(prettyJsonString);
-                //System.out.println(listJsonObject.toString());
                 fileWriter.close();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
@@ -302,25 +259,10 @@ public class LocationService {
         List<LocationDTO> listLocation = findLocations(input, url, db);
         if (listLocation.isEmpty())
             logger.error("Export Json Locations: ListLocation is null");
-            // Create a JsonArray
-//        JSONArray listJsonObject = new JSONArray();
-//        for (LocationDTO location : listLocation) {
-//            //Creating a JSONObject object
-//            JSONObject jsonObject = new JSONObject();
-//            //Inserting key-value pairs into the json object
-//            jsonObject.put("id", location.getId());
-//            jsonObject.put("name", location.getName());
-//            jsonObject.put("region", location.getRegion());
-//            jsonObject.put("country", location.getCountry());
-//            jsonObject.put("lat", location.getLat());
-//            jsonObject.put("lon", location.getLon());
-//            jsonObject.put("url", location.getUrl());
-//            listJsonObject.add(jsonObject);
-//        }
         else {
             try {
                 //Gson gson = new Gson();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithModifiers(Modifier.STATIC).create();
                 //List< LocationDTO> locationDTO = List.of(gson.fromJson(listJsonObject.toString(), LocationDTO[].class));
                 String prettyJsonString = gson.toJson(listLocation);
                 // Create one file
@@ -330,9 +272,6 @@ public class LocationService {
                 }
                 LocalDateTime localDateTime = LocalDateTime.now();
                 String currentDirectory = file.getName()+"/location"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json";
-                //currentDirectory = currentDirectory.replaceAll("\"","//");
-
-                System.out.println(currentDirectory);
                 FileWriter fileWriter = new FileWriter(currentDirectory);
                 // Writing file
                 fileWriter.write(prettyJsonString);
@@ -356,7 +295,7 @@ public class LocationService {
             logger.error("Export Excel Location: ListLocation không có data");
         try {
             // Create Workbook
-            Workbook workbook = getWorkbook(excelFilePath);
+            Workbook workbook = ExportExcel.getWorkbook(excelFilePath);
             // Create sheet
             Sheet sheet = workbook.createSheet("Location");
             int rowIndex = 0;
@@ -373,16 +312,55 @@ public class LocationService {
             }
             // Auto resize column witdth
             int numberOfColumn = sheet.getRow(0).getPhysicalNumberOfCells();
-            autoSizeColumn(sheet, numberOfColumn);
+            ExportExcel.autoSizeColumn(sheet, numberOfColumn);
             // Create file excel
-            createOutputFile(workbook, excelFilePath);
+            ExportExcel.createOutputFile(workbook, excelFilePath);
             logger.info("Export Excel Location: Done!!!");
         } catch (Exception e) {
             logger.error("Export Excel Location: Lỗi tạo file excel " + excelFilePath);
         }
         return listLocation;
     }
-
+    public static String exportDownloadExcelLocations(LocationRequest input, String url, String db) throws IOException {
+        String fileName=null;
+        List<LocationDTO> listLocation = findLocations(input, url, db);
+        if (listLocation == null)
+            logger.error("Export Excel Location: ListLocation không có data");
+        try {
+            // Create Workbook
+            File file = new File("./export");
+            if (!file.exists()){
+                file.mkdirs();
+            }
+            LocalDateTime localDateTime = LocalDateTime.now();
+            String currentDirectory = file.getName()+"/location"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".xlsx";
+            Workbook workbook = ExportExcel.getWorkbook(currentDirectory);
+            // Create sheet
+            Sheet sheet = workbook.createSheet("Location");
+            int rowIndex = 0;
+            // Write header
+            writeHeader(sheet, rowIndex);
+            // Write data
+            rowIndex++;
+            for (LocationDTO locationDTO : listLocation) {
+                // Create row
+                Row row = sheet.createRow(rowIndex);
+                // Write data on row
+                writeBook(locationDTO, row);
+                rowIndex++;
+            }
+            // Auto resize column witdth
+            int numberOfColumn = sheet.getRow(0).getPhysicalNumberOfCells();
+            ExportExcel.autoSizeColumn(sheet, numberOfColumn);
+            // Create file excel
+            ExportExcel.createOutputFile(workbook, currentDirectory);
+            logger.info("Export Excel Location: Done!!!");
+            fileName = currentDirectory;
+        } catch (Exception e) {
+            logger.error("Export Excel Location: Lỗi tạo file excel " + excelFilePath);
+        }
+        return fileName;
+    }
 //    public static List<LocationDTO> testFindLocations(LocationRequest input, String url, String db) throws IOException {
 //        String input_object = input.getInput();
 //
