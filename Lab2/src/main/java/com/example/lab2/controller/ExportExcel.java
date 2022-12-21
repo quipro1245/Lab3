@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class ExportExcel {
-    private final static Logger logger = LogManager.getLogger(LocationService.class);
+    private final static Logger logger = LogManager.getLogger(ExportExcel.class);
     public static void autoSizeColumn(Sheet sheet, int lastColumn) {
         for (int columnIndex = 0; columnIndex < lastColumn; columnIndex++) {
             sheet.autoSizeColumn(columnIndex);

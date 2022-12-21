@@ -134,6 +134,29 @@ public class WeatherController {
         return ResponseEntity.ok(weatherResponse);
 
     }
+    @PostMapping(value = "/findWeatherFollowRequestPaging")
+    public ResponseEntity<Response> findWeatherFollowRequestPaging(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult ) {
+
+        Response weatherResponse = new Response();
+        if (bindingResult.hasErrors()) {
+
+            logger.error("Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            weatherResponse.setStatus("400");
+            ArrayList message = new ArrayList<>();
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                message.add(error.getDefaultMessage());
+            }
+            weatherResponse.setMessage("ERROR, find weather follow request: " + message);
+            //weatherResponse.setMessage("ERROR: export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(weatherResponse);
+        }
+        weatherResponse.setStatus("200");
+        weatherResponse.setResult(WeatherService.findWeatherFollowRequestPaging(input, mongoConfig.getUrl(), mongoConfig.getDb()));
+        weatherResponse.setMessage("Success");
+
+        return ResponseEntity.ok(weatherResponse);
+
+    }
     @PostMapping(value = "/exportAndDownloadJsonWeather")
     public ResponseEntity<?> exportAndDownloadJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
         //return  LocationService.exportJsonLocations(input);
@@ -141,7 +164,12 @@ public class WeatherController {
         if (bindingResult.hasErrors()) {
             logger.error("Export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            ArrayList message = new ArrayList<>();
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                message.add(error.getDefaultMessage());
+            }
+            weatherResponse.setMessage("ERROR, find weather follow request: " + message);
+            //weatherResponse.setMessage("ERROR: Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             return ResponseEntity.badRequest().body(weatherResponse);
         }
         String fileName = exportDownloadJsonWeather(input, mongoConfig.getUrl(), mongoConfig.getDb());
@@ -161,7 +189,12 @@ public class WeatherController {
         if (bindingResult.hasErrors()) {
             logger.error("Export json weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
             weatherResponse.setStatus("400");
-            weatherResponse.setMessage("ERROR: Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            //weatherResponse.setMessage("ERROR: Export excel weather: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            ArrayList message = new ArrayList<>();
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                message.add(error.getDefaultMessage());
+            }
+            weatherResponse.setMessage("ERROR, find weather follow request: " + message);
             return ResponseEntity.badRequest().body(weatherResponse);
         }
         String fileName = exportDownloadExcelWeather(input, mongoConfig.getUrl(), mongoConfig.getDb());

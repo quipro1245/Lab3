@@ -120,8 +120,7 @@ public class LocationController {
 //        return ResponseEntity.ok(locationResponse);
 //    }
     @GetMapping(value = "/downloadFile")
-    public ResponseEntity<Resource> downloadFile(@RequestParam("name") String fileName,
-                                                 HttpServletRequest request) throws FileNotFoundException {
+    public ResponseEntity<Resource> downloadFile(@RequestParam("name") String fileName, HttpServletRequest request) throws FileNotFoundException {
         Resource resource = null;
         File file = new File("./export/"+fileName);
         InputStream  stream = new FileInputStream(file);

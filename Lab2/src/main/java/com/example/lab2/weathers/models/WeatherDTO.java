@@ -347,7 +347,7 @@ public class WeatherDTO {
         this.gustKph = gustKph;
     }
 
-    public String getObjectToString(ConditionDTO condition){
+    public String getConditionToString(ConditionDTO condition){
         String result ="";
         try {
             result+= "text: "+condition.getText()+

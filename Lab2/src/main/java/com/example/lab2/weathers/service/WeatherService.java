@@ -8,11 +8,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.BasicDBObject;
+import com.mongodb.client.*;
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.internal.Iterables;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
@@ -25,11 +28,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static com.example.lab2.locations.service.LocationService.*;
+import static com.mongodb.client.model.Filters.and;
+import static javax.management.Query.*;
 
 public class WeatherService {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);
@@ -444,7 +447,7 @@ public class WeatherService {
         cell.setCellValue(weatherDTO.getIsDay());
 
         cell = row.createCell(COLUMN_CONDITION);
-        cell.setCellValue(weatherDTO.getObjectToString(weatherDTO.getCondition()));
+        cell.setCellValue(weatherDTO.getConditionToString(weatherDTO.getCondition()));
 
 
         cell = row.createCell(COLUMN_WIND_MPH);
@@ -616,28 +619,18 @@ public class WeatherService {
         return fileName;
     }
     public static List<WeatherDTO> findWeatherFollowRequest(WeatherRequest input, String url, String db) {
-        String startDate = "";
-        String endDate = "";
+
         List<WeatherDTO> listWeather = new ArrayList<>();
-        String locationId = input.getLocationId().trim();
-        //locationId = locationId.replaceAll(" ", "");
-        String[] arrLocation = locationId.split(",");
-//        if (input.getDatetimeRange().isBlank()) {
-//            logger.error("Test get list weather: get datetime_range is null");
-//        } else {
-        String[] dateTimeRange = input.getDatetimeRange().split("-");
-        if (dateTimeRange.length < 2 || dateTimeRange.length > 2) {
-            logger.error("Find weather follow request: dateTimeRange have must startDate and endDate");
-        } else {
-            startDate = dateTimeRange[0].trim();
-            endDate = dateTimeRange[1].trim();
+        String locationId =null;
+        String[] arrLocation =null;
+        if(!StringUtils.isBlank(input.getLocationId())){
+            locationId = input.getLocationId().trim();
+            arrLocation = locationId.split(",");
         }
-////         }
-//        if (input.getLocationId().isBlank()) {
-//            logger.error("Test get list weather: get location_id is null");
-//        } else {
-//            arrLocation = locationId.split(",");
-//        }
+        String[] dateTimeRange = input.getDatetimeRange().split("-");
+        String startDate = dateTimeRange[0].trim();
+        String endDate = dateTimeRange[1].trim();
+
         try {
             LocalDateTime dateTimeStartDate = LocalDateTime.parse(startDate.trim(), formatter);
             LocalDateTime dateTimeEndDate = LocalDateTime.parse(endDate.trim(), formatter);
@@ -645,61 +638,34 @@ public class WeatherService {
             endDate = dateTimeEndDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
             LocalDateTime dateTimeTmp = dateTimeStartDate;
+            List<MongoCollection<Document>> listCollection = new ArrayList<>();
             while (dateTimeTmp.compareTo(dateTimeEndDate) <= 0) {
                 try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
                     MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
                     MongoCollection<Document> collection = database.getCollection(String.format("Weather_%s", dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
-                    Bson filters = Filters.and(
+                    Bson filters = and(
                             Filters.gte("time", startDate),
                             Filters.lte("time", endDate),
-                            Filters.in("location_id", arrLocation)
-                    );
-                    FindIterable<Document> myDoc = collection.find(filters);
+                            Filters.in("location_id", arrLocation));
+                    if(ArrayUtils.isEmpty(arrLocation)){
+                        filters = and(
+                                Filters.gte("time", startDate),
+                                Filters.lte("time", endDate));
+                    }
+
+                    //FindIterable<Document> myDoc = collection.find(filters);
+                    FindIterable<Document> myDoc = collection.find(filters).limit( input.getLimit()).skip((input.getPage()-1)* input.getLimit());
+                    listCollection.add(collection);
 
                     //listWeather = List.of(objectMapper.readValue(myDoc.toString(), WeatherDTO[].class));
                     if (myDoc.first() == null) {
                         logger.error(String.format("Find weather follow date, Error, dateTimeRange: %s,locationId: %s, url: %s, db: %s, date: %s", input.getDatetimeRange(), locationId, url, db, dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
                     } else {
                         for (Document doc : myDoc) {
-                            WeatherDTO weatherDTO = new WeatherDTO();
+                            WeatherDTO weatherDTO;
                             ObjectMapper objectMapper = new ObjectMapper();
                             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                             weatherDTO = objectMapper.readValue(doc.toBsonDocument().toString(), WeatherDTO.class);
-
-//                            weatherDTO.setLocation_id(ObjectUtils.isEmpty(doc.get("location_id"))?"":doc.get("id").toString());
-//                            weatherDTO.setTime_epoch(ObjectUtils.isEmpty(doc.get("time_epoch"))?0:Integer.parseInt(doc.get("time_epoch").toString()));
-//                            weatherDTO.setTime(ObjectUtils.isEmpty(doc.get("time"))?"":doc.get("time").toString());
-//                            weatherDTO.setTempC(ObjectUtils.isEmpty(doc.get("temp_c"))?0:Double.parseDouble(doc.get("temp_c").toString()));
-//                            weatherDTO.setTempF(ObjectUtils.isEmpty(doc.get("temp_f"))?0:Double.parseDouble(doc.get("temp_f").toString()));
-//                            weatherDTO.setIsDay(ObjectUtils.isEmpty(doc.get("is_day"))?0:Integer.parseInt(doc.get("is_day").toString()));
-//                            weatherDTO.setCondition(ObjectUtils.isEmpty(doc.get("condition"))?"":doc.get("condition"));
-//                            weatherDTO.setWindMph(ObjectUtils.isEmpty(doc.get("wind_mph"))?0:Double.parseDouble(doc.get("wind_mph").toString()));
-//                            weatherDTO.setWindKph(ObjectUtils.isEmpty(doc.get("wind_kph"))?0:Double.parseDouble(doc.get("wind_kph").toString()));
-//                            weatherDTO.setWindDegree(ObjectUtils.isEmpty(doc.get("wind_degree"))?0:Integer.parseInt(doc.get("wind_degree").toString()));
-//                            weatherDTO.setWindDir(ObjectUtils.isEmpty(doc.get("wind_dir"))?"":doc.get("wind_dir").toString());
-//                            weatherDTO.setPressureMb(ObjectUtils.isEmpty(doc.get("pressure_mb"))?0:Double.parseDouble(doc.get("pressure_mb").toString()));
-//                            weatherDTO.setPressureIn(ObjectUtils.isEmpty(doc.get("pressure_in"))?0:Double.parseDouble(doc.get("pressure_in").toString()));
-//                            weatherDTO.setPrecipMm(ObjectUtils.isEmpty(doc.get("precip_mm"))?0:Double.parseDouble(doc.get("precip_mm").toString()));
-//                            weatherDTO.setPrecipIn(ObjectUtils.isEmpty(doc.get("precip_in"))?0:Double.parseDouble(doc.get("precip_in").toString()));
-//                            weatherDTO.setHumidity(ObjectUtils.isEmpty(doc.get("humidity"))?0:Integer.parseInt(doc.get("humidity").toString()));
-//                            weatherDTO.setCloud(ObjectUtils.isEmpty(doc.get("cloud"))?0:Integer.parseInt(doc.get("cloud").toString()));
-//                            weatherDTO.setFeelsLikeC(ObjectUtils.isEmpty(doc.get("feelslike_c"))?0:Double.parseDouble(doc.get("feelslike_c").toString()));
-//                            weatherDTO.setFeelsLikeF(ObjectUtils.isEmpty(doc.get("feelslike_f"))?0:Double.parseDouble(doc.get("feelslike_f").toString()));
-//                            weatherDTO.setWindChillC(ObjectUtils.isEmpty(doc.get("windchill_c"))?0:Double.parseDouble(doc.get("windchill_c").toString()));
-//                            weatherDTO.setWindChillF(ObjectUtils.isEmpty(doc.get("windchill_f"))?0:Double.parseDouble(doc.get("windchill_f").toString()));
-//                            weatherDTO.setHeatIndexC(ObjectUtils.isEmpty(doc.get("heatindex_c"))?0:Double.parseDouble(doc.get("heatindex_c").toString()));
-//                            weatherDTO.setHeatIndexF(ObjectUtils.isEmpty(doc.get("heatindex_f"))?0:Double.parseDouble(doc.get("heatindex_f").toString()));
-//                            weatherDTO.setDewPointC(ObjectUtils.isEmpty(doc.get("dewpoint_c"))?0:Double.parseDouble(doc.get("dewpoint_c").toString()));
-//                            weatherDTO.setDewPointF(ObjectUtils.isEmpty(doc.get("dewpoint_f"))?0:Double.parseDouble(doc.get("dewpoint_f").toString()));
-//                            weatherDTO.setWillItRain(ObjectUtils.isEmpty(doc.get("will_it_rain"))?0:Integer.parseInt(doc.get("will_it_rain").toString()));
-//                            weatherDTO.setChanceOfRain(ObjectUtils.isEmpty(doc.get("chance_of_rain"))?0:Integer.parseInt(doc.get("chance_of_rain").toString()));
-//                            weatherDTO.setWillItSnow(ObjectUtils.isEmpty(doc.get("will_it_snow"))?0:Integer.parseInt(doc.get("will_it_snow").toString()));
-//                            weatherDTO.setChanceOfSnow(ObjectUtils.isEmpty(doc.get("chance_of_snow"))?0:Integer.parseInt(doc.get("chance_of_snow").toString()));
-//                            weatherDTO.setVisKm(ObjectUtils.isEmpty(doc.get("vis_km"))?0:Double.parseDouble(doc.get("vis_km").toString()));
-//                            weatherDTO.setVisMiles(ObjectUtils.isEmpty(doc.get("vis_miles"))?0:Double.parseDouble(doc.get("vis_miles").toString()));
-//                            weatherDTO.setGustMph(ObjectUtils.isEmpty(doc.get("gust_mph"))?0:Double.parseDouble(doc.get("gust_mph").toString()));
-//                            weatherDTO.setGustKph(ObjectUtils.isEmpty(doc.get("gust_kph"))?0:Double.parseDouble(doc.get("gust_kph").toString()));
-
                             listWeather.add(weatherDTO);
                         }
                     }
@@ -712,6 +678,88 @@ public class WeatherService {
         } catch (Exception e){
             logger.error("Find weather follow request, Exception: "+e);
             logger.error(String.format("Find weather follow request, Lỗi không đúng format, startDate: %s, endDate: %s, format: dd/MM/yyyy HH:mm:ss",startDate, endDate));
+        }
+        return listWeather;
+    }
+    public static List<WeatherDTO> findWeatherFollowRequestPaging(WeatherRequest input, String url, String db) {
+
+        List<WeatherDTO> listWeather = new ArrayList<>();
+        String locationId =null;
+        String[] arrLocation =null;
+        if(!StringUtils.isBlank(input.getLocationId())){
+            locationId = input.getLocationId().trim();
+            arrLocation = locationId.split(",");
+        }
+        String[] dateTimeRange = input.getDatetimeRange().split("-");
+        String startDate = dateTimeRange[0].trim();
+        String endDate = dateTimeRange[1].trim();
+        try {
+            LocalDateTime dateTimeStartDate = LocalDateTime.parse(startDate.trim(), formatter);
+            LocalDateTime dateTimeEndDate = LocalDateTime.parse(endDate.trim(), formatter);
+            startDate = dateTimeStartDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            endDate = dateTimeEndDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            LocalDateTime dateTimeTmp = dateTimeStartDate;
+            List<MongoCollection<Document>> listCollection = new ArrayList<>();
+                try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+                    MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+                    while (dateTimeTmp.compareTo(dateTimeEndDate) <= 0) {
+                        MongoCollection<Document> collection = database.getCollection(String.format("Weather_%s", dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
+                        listCollection.add(collection);
+                        dateTimeTmp = dateTimeTmp.plusDays(1);
+                    }
+                    Bson filters = Filters.and(
+                            Filters.gte("time", startDate),
+                            Filters.lte("time", endDate));
+                    if(!ArrayUtils.isEmpty(arrLocation)){
+                        filters = Filters.and(
+                                Filters.gte("time", startDate),
+                                Filters.lte("time", endDate),
+                                Filters.in("location_id", arrLocation));
+                    }
+
+                    List<Document> listAggregation = new ArrayList<>();
+                    int index = 1;
+                    while (index<listCollection.size()){
+                        listAggregation.add( new Document("$unionWith", listCollection.get(index).getNamespace().getCollectionName()));
+                        index++;
+                    }
+
+                    List listAggregateFilter= Arrays.asList(
+//                            new Document("$unionWith", listCollection.get(1).getNamespace().getCollectionName()),
+//                            new Document("$unionWith", listCollection.get(2).getNamespace().getCollectionName()),
+                            Aggregates.match(filters),
+                            Aggregates.skip((input.getPage()-1)* input.getLimit()),
+                            new Document("$limit",input.getLimit())
+                    );
+                    listAggregation.addAll(listAggregateFilter);
+                    AggregateIterable<Document> documentAggregateIterable= listCollection.get(0).aggregate(listAggregation);
+//                            Arrays.asList(
+//
+//                                    new Document("$unionWith", listCollection.get(1).getNamespace().getCollectionName()),
+//                                    Aggregates.match(filters),
+//                                    Aggregates.skip((input.getPage()-1)* input.getLimit()),
+//                                    new Document("$limit",input.getLimit())
+//
+//                                   )
+
+                    if (documentAggregateIterable.first() == null) {
+                        logger.error(String.format("Find weather follow request paging, Error doc is null, dateTimeRange: %s,locationId: %s, url: %s, db: %s, date: %s", input.getDatetimeRange(), locationId, url, db, dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
+                    } else {
+                        for (Document doc : documentAggregateIterable) {
+                            WeatherDTO weatherDTO;
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                            weatherDTO = objectMapper.readValue(doc.toBsonDocument().toString(), WeatherDTO.class);
+                            listWeather.add(weatherDTO);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Find weather follow request paging, exception: "+e);
+                    logger.error(String.format("Find weather follow request paging: Error, dateTimeRange: %s,locationId: %s, url: %s, db: %s, date: %s", input.getDatetimeRange(), locationId, url, db, dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
+                }
+        } catch (Exception e){
+            logger.error("Find weather follow request, Exception: "+e);
+            logger.error(String.format("Find weather follow request paging, Lỗi không đúng format, startDate: %s, endDate: %s, format: dd/MM/yyyy HH:mm:ss",startDate, endDate));
         }
         return listWeather;
     }
