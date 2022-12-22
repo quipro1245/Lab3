@@ -654,7 +654,7 @@ public class WeatherService {
                     }
 
                     //FindIterable<Document> myDoc = collection.find(filters);
-                    FindIterable<Document> myDoc = collection.find(filters).limit( input.getLimit()).skip((input.getPage()-1)* input.getLimit());
+                    FindIterable<Document> myDoc = collection.find(filters);
                     listCollection.add(collection);
 
                     //listWeather = List.of(objectMapper.readValue(myDoc.toString(), WeatherDTO[].class));

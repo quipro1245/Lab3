@@ -17,13 +17,13 @@ public class WeatherRequest {
 
 
     @JsonProperty("page")
-    @Min(value = 1,message = "page bắt đầu từ trang 1")
+    //@Min(value = 1,message = "page bắt đầu từ trang 1")
 
     private int page;
 
     @JsonProperty("limit")
-    @Min(value = 10,message = "limit phải lớn hơn hoặc bằng 10")
-    @Max(value = 50,message = "limit phải nhó hơn hoặc bằng 50")
+//    @Min(value = 10,message = "limit phải lớn hơn hoặc bằng 10")
+//    @Max(value = 50,message = "limit phải nhó hơn hoặc bằng 50")
 
     private int limit;
     public String getDatetimeRange() {
