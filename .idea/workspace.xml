@@ -4,7 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9339689-cfcf-4bea-a10b-77e500eaed12" name="Changes" comment="" />
+    <list default="true" id="f9339689-cfcf-4bea-a10b-77e500eaed12" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/controller/MySqlConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/ui/userLogin.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/ui/view/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/controller/UserController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/model/UserDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/model/UserRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/model/UserRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/request/LoginRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/request/RegisterRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/user/service/UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/DeleteUser.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/addUser.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/register.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/register_success.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lab2/src/main/resources/templates/user.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Lab2/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Lab2/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/weathers/service/WeatherService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Lab2/src/main/java/com/example/lab2/weathers/service/WeatherService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Lab2/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/Lab2/src/main/resources/application.properties" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

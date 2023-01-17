@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Location</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.fileDownload/1.4.2/jquery.fileDownload.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.fileDownload/1.4.2/jquery.fileDownload.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/index}">Home</a>
+        <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+                data-bs-target="#navbarSupportedContent" data-bs-toggle="collapse" type="button">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a id="login" aria-current="page" class="nav-link active" th:if="${session.id == null}" th:href="@{/login}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a id="user" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/user}">User</a>
+                </li>
+                <li class="nav-item">
+                    <a id="location" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/location}">Location</a>
+                </li>
+                <li class="nav-item">
+                    <a id="weather" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/weather}">Weather</a>
+                </li>
+                <li class="nav-item">
+                    <a id="logout" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/logout}" >Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+
+    <div class="card">
+        <div class="card-header">
+            <h2>List location</h2>
+        </div>
+        <div class="card-body">
+            <div class="input-group mb-3">
+                <input  type="text" id="input" name="input" class="form-control"  placeholder="Enter user name or email" required/>
+                <button  class="btn btn-primary" id="send" >Find</button>
+            </div>
+
+            <a class="btn btn-success" id="downloadJson" href="#" role="button">Download Json</a>
+            <a class="btn btn-success" id="downloadExcel" href="#" role="button">Download Excel</a>
+
+            <table id="myTable">
+                <thead >
+                <tr align="center">
+                    <th>id</th>
+                    <th>name</th>
+                    <th>region</th>
+                    <th>country</th>
+                    <th>lat</th>
+                    <th>lon</th>
+                    <th>url</th>
+                    <!--        <th></th>-->
+                </tr>
+                </thead>
+
+            </table>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+$(document).ready( function () {
+    var t = $('#myTable').DataTable({
+         searching: false,
+         ordering: false,
+          "columns": [
+                { "width": "5%" },
+                { "width": "10%" },
+                { "width": "20%" },
+                { "width": "15%" },
+                { "width": "5%" },
+                { "width": "5%" },
+                { "width": "40%" }
+          ]
+    });
+    function checkInput( input) {
+        var regex=/^[a-zA-Z0-9]{0,50}$/;
+        if(!input){
+            alert("Vui lòng nhập giá trị cần tìm");
+            return false;
+        }
+        if(!input.match(regex)){
+            alert("Vui lòng không nhập ký tự đặt biệt");
+            return false;
+        }
+        return true;
+    }
+    $("#send").click(function(ev) {
+        var input = $('#input').val();
+
+        if(checkInput(input) == false) {
+            return false;
+        } else {
+            console.log(input);
+            $.ajax({
+                type: "post",
+                contentType: 'application/json',
+                dataType: 'json',
+                url: "location",
+                data: JSON.stringify({"input":input}),
+                success: function(data){
+                    if(data.length==0){
+                        alert("Không tìm thấy");
+                    } else {
+                        alert('Success find user!');
+    <!--                             t.rows.remove();-->
+                        $.each(data, function(index) {
+                            t.row.add([data[index].id, data[index].name, data[index].region, data[index].country, data[index].lat, data[index].lon, data[index].url]).draw(false);
+                        });
+                    }
+                     return false;
+                },
+                error: function(data){
+                     alert('fail find user!');
+                     return false;
+                }
+            });
+        }
+    });
+    $("#downloadJson").click(function (e) {
+        var input = $('#input').val();
+        if(checkInput(input) == false) {
+            return false;
+        } else {
+            e.preventDefault();
+            $.ajax({
+                type: "post",
+                contentType: 'application/json',
+                dataType: 'json',
+                url: "exportAndDownloadJsonLocations",
+                data: JSON.stringify({"input":input}),
+<!--                xhr: function () {-->
+<!--                    var xhr = new XMLHttpRequest();-->
+<!--                    xhr.onreadystatechange = function () {-->
+<!--                         if (xhr.readyState == 2) {-->
+<!--                            xhr.responseType = "blob";-->
+<!--                         }-->
+<!--                    };-->
+<!--                    return xhr;-->
+<!--                },-->
+                success: function(data){
+                    if(!data){
+                        alert("Error");
+                    }
+                    if(data.length==0){
+                        alert("Không tìm thấy");
+                    } else {
+                        alert('Download json: Success find location!');
+<!--                        var contentDisposition = data.headers["Content-Disposition"];-->
+                        //var filename = "";
+<!--                        if (contentDisposition) {-->
+<!--                            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;-->
+<!--                            var matches = filenameRegex.exec(contentDisposition);-->
+<!--                            if (matches != null && matches[1]) {-->
+<!--                              filename = matches[1].replace(/['"]/g, '');-->
+<!--                            }-->
+<!--                        }-->
+                        var json = JSON.stringify(data, null, "\t");
+                        //Convert the Byte Data to BLOB object.
+                        var blob = new Blob([json], { type: "application/json" });
+                        var d = new Date();
+                        var month = d.getMonth()+1;
+                        var day = d.getDate();
+                        var filename = "location"+ (day<10 ? '0' : '') + day + "-" + (month<10 ? '0' : '') + month + "-" + d.getFullYear() + "-" + (d.getHours()<10 ? '0' : '') + d.getHours() + "-" + (d.getMinutes()<10 ? '0' : '') + d.getMinutes() + "-" + (d.getSeconds()<10 ? '0' : '') + d.getSeconds() + ".json";
+                        //Check the Browser type and download the File.
+                        var isIE = false || !!document.documentMode;
+                        if (isIE) {
+                            console.log("isIE");
+                            window.navigator.msSaveBlob(blob, filename);
+                        } else {
+                            var url = window.URL || window.webkitURL;
+                            link = url.createObjectURL(blob);
+                            var a = $("<a />");
+                            a.attr("download", filename);
+                            a.attr("href", link);
+                            $("body").append(a);
+                            a[0].click();
+                            $("body").remove(a);
+                            alert('Download json: Success download location!');
+                        }
+                    }
+                    return false;
+                },
+                error: function(data){
+                    alert('fail find user!');
+                    return false;
+                }
+            });
+        }
+    });
+    $("#downloadExcel").click(function (e) {
+        var input = $('#input').val();
+        if(checkInput(input) == false) {
+            return false;
+        } else {
+            e.preventDefault();
+            $.ajax({
+                type: "post",
+                contentType: 'application/json',
+                url: "exportAndDownloadExcelLocations",
+                data: JSON.stringify({"input":input}),
+                xhr: function () {
+                    var xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = function () {
+                         if (xhr.readyState == 2) {
+                            xhr.responseType = "blob";
+                         }
+                    };
+                    return xhr;
+                },
+                success: function(data){
+                    if(data.length==0){
+                        alert("Không tìm thấy");
+                    } else {
+                        alert('Download excel: Success find location!');
+    <!--                    var contentDisposition = data.headers["Content-Disposition"];-->
+    <!--                    var filename = "";-->
+    <!--                    if (contentDisposition) {-->
+    <!--                        var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;-->
+    <!--                        var matches = filenameRegex.exec(contentDisposition);-->
+    <!--                        if (matches != null && matches[1]) {-->
+    <!--                          filename = matches[1].replace(/['"]/g, '');-->
+    <!--                        }-->
+    <!--                    }-->
+    <!--                    var json = JSON.stringify(data.body, null, "\t");-->
+                        //Convert the Byte Data to BLOB object.
+                        //debugger;
+                        //var bytes = new Uint8Array(data);
+                        //var blob = new Blob([this.data], "location.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                        var blob = new Blob([data], { type: "application/octetstream" });
+                        //Check the Browser type and download the File.
+                        var d = new Date();
+                        var month = d.getMonth()+1;
+                        var day = d.getDate();
+                        var filename = "location"+ (day<10 ? '0' : '') + day + "-" + (month<10 ? '0' : '') + month + "-" + d.getFullYear() + "-" + (d.getHours()<10 ? '0' : '') + d.getHours() + "-" + (d.getMinutes()<10 ? '0' : '') + d.getMinutes() + "-" + (d.getSeconds()<10 ? '0' : '') + d.getSeconds() + ".xlsx";
+                        var isIE = false || !!document.documentMode;
+                        if (isIE) {
+                            console.log("isIE");
+                            window.navigator.msSaveBlob(blob, filename);
+                        } else {
+                             alert('Download excel: Success download location!');
+                            var url = window.URL || window.webkitURL;
+                            link = url.createObjectURL(blob);
+                            var a = $("<a />");
+                            a.attr("download", filename);
+                            a.attr("href", link);
+                            $("body").append(a);
+                            a[0].click();
+                            $("body").remove(a);
+                        }
+                    }
+                    return false;
+                },
+                error: function(data){
+                    alert('fail find user!');
+                    return false;
+                }
+            });
+        }
+    });
+} );
+</script>
+</body>
+</html>
