@@ -1,10 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+>
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <title>Registration and Login System</title>
+  <link crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+        rel="stylesheet">
 </head>
 <body>
-$END$
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" th:href="@{/index}">Home</a>
+    <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+            data-bs-target="#navbarSupportedContent" data-bs-toggle="collapse" type="button">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a aria-current="page" class="nav-link active" th:href="@{/login}">Login</a>
+        </li>
+        <li class="nav-item">
+          <a aria-current="page" class="nav-link active" th:href="@{/users}">User</a>
+        </li>
+        <li class="nav-item">
+          <a aria-current="page" class="nav-link active" th:href="@{/register}">Register</a>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</nav>
+<br/><br/>
+<div class="container">
+  <div class="row">
+    <div class="card">
+
+      <div class="card-body">
+        <form method="post" role="form" th:action="@{'/user/delete/'+user.id}" th:object="${user}" class="form-horizontal">
+          <div class="form-group mb-3">
+            <label class="control-label"> Bạn có muốn xóa user "${user.id}" </label>
+
+
+          </div>
+
+          <div class="form-group mb-3">
+            <button type="submit" class="btn btn-danger" >Delete</button>
+            <span> Not registered ?
+                                <a th:href="@{/register}">Register</a>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

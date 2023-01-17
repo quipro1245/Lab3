@@ -1,7 +1,7 @@
 package com.example.lab2;
 
 import com.example.lab2.controller.RestSpringBootController;
-import com.example.lab2.model.Location;
+import com.example.lab2.response.model.Location;
 import com.example.lab2.repository.LocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

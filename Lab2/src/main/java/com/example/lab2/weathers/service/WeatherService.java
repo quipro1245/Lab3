@@ -8,12 +8,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mongodb.BasicDBObject;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
-import com.mongodb.internal.Iterables;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -21,25 +18,18 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.util.ObjectUtils;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-import static com.example.lab2.locations.service.LocationService.*;
 import static com.mongodb.client.model.Filters.and;
-import static javax.management.Query.*;
 
 public class WeatherService {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-    private final static DateTimeFormatter formatterWeather = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    private static final String excelFilePath = "D:/weathers.xlsx";
     private static final int COLUMN_INDEX_ID = 0;
     private static final int COLUMN_TIME_EPOCH = 1;
     private static final int COLUMN_TIME = 2;
@@ -236,7 +226,7 @@ public class WeatherService {
                     file.mkdirs();
                 }
                 LocalDateTime localDateTime = LocalDateTime.now();
-                String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json";
+                String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +".json";
                 //Gson gson = new Gson();
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 //WeatherDTO[] weatherDTOS = gson.fromJson(listJsonObject.toString(), WeatherDTO[].class);
@@ -270,7 +260,7 @@ public class WeatherService {
                 String jsonArray = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listWeather);
 
                 LocalDateTime localDateTime = LocalDateTime.now();
-                String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json";
+                String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +".json";
 
                 FileWriter fileWriter = new FileWriter(currentDirectory);
                 fileWriter.write(jsonArray);
@@ -293,7 +283,7 @@ public class WeatherService {
         // Create cells
         Cell cell = row.createCell(COLUMN_INDEX_ID);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("id");
+        cell.setCellValue("location_id");
 
         cell = row.createCell(COLUMN_TIME_EPOCH);
         cell.setCellStyle(cellStyle);
@@ -318,7 +308,6 @@ public class WeatherService {
         cell = row.createCell(COLUMN_CONDITION);
         cell.setCellStyle(cellStyle);
         cell.setCellValue("condition");
-
 
         cell = row.createCell(COLUMN_WIND_MPH);
         cell.setCellStyle(cellStyle);
@@ -549,7 +538,7 @@ public class WeatherService {
                 file.mkdirs();
             }
             LocalDateTime localDateTime = LocalDateTime.now();
-            String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".json";
+            String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +".json";
             // Create Workbook
             Workbook workbook = ExportExcel.getWorkbook(currentDirectory);
             // Create sheet
@@ -589,7 +578,7 @@ public class WeatherService {
                 file.mkdirs();
             }
             LocalDateTime localDateTime = LocalDateTime.now();
-            String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-YYYY-HH-mm-ss")) +".xlsx";
+            String currentDirectory = file.getName()+"/weather"+localDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +".xlsx";
             // Create Workbook
             Workbook workbook = ExportExcel.getWorkbook(currentDirectory);
             // Create sheet
@@ -645,14 +634,13 @@ public class WeatherService {
                     MongoCollection<Document> collection = database.getCollection(String.format("Weather_%s", dateTimeTmp.format(DateTimeFormatter.BASIC_ISO_DATE)));
                     Bson filters = and(
                             Filters.gte("time", startDate),
-                            Filters.lte("time", endDate),
-                            Filters.in("location_id", arrLocation));
-                    if(ArrayUtils.isEmpty(arrLocation)){
+                            Filters.lte("time", endDate));
+                    if(!ArrayUtils.isEmpty(arrLocation)){
                         filters = and(
                                 Filters.gte("time", startDate),
-                                Filters.lte("time", endDate));
+                                Filters.lte("time", endDate),
+                                Filters.in("location_id", arrLocation));
                     }
-
                     //FindIterable<Document> myDoc = collection.find(filters);
                     FindIterable<Document> myDoc = collection.find(filters);
                     listCollection.add(collection);
@@ -666,6 +654,7 @@ public class WeatherService {
                             ObjectMapper objectMapper = new ObjectMapper();
                             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                             weatherDTO = objectMapper.readValue(doc.toBsonDocument().toString(), WeatherDTO.class);
+                            weatherDTO.setId(doc.get("_id").toString());
                             listWeather.add(weatherDTO);
                         }
                     }
@@ -750,6 +739,7 @@ public class WeatherService {
                             ObjectMapper objectMapper = new ObjectMapper();
                             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                             weatherDTO = objectMapper.readValue(doc.toBsonDocument().toString(), WeatherDTO.class);
+                            weatherDTO.setId(doc.get("_id").toString());
                             listWeather.add(weatherDTO);
                         }
                     }

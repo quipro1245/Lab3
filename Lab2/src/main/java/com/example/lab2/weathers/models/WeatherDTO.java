@@ -5,6 +5,7 @@ import com.example.lab2.weathers.service.WeatherService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,6 +14,8 @@ import java.util.Map;
 @Document("Weather")
 public class WeatherDTO {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);
+
+    private String id;
     @JsonProperty("location_id")
     private String locationId;
     @JsonProperty("time_epoch")
@@ -81,6 +84,14 @@ public class WeatherDTO {
     private Double gustMph;
     @JsonProperty("gust_kph")
     private Double gustKph;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getLocationId() {
         return locationId;

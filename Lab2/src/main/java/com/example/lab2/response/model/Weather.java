@@ -1,4 +1,4 @@
-package com.example.lab2.model;
+package com.example.lab2.response.model;
 
 import java.util.Map;
 

@@ -1,10 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+>
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <title>User</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 <body>
-$END$
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" th:href="@{/index}">Home</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" th:href="@{/logout}">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container">
+
+  <div class="row col-md-10">
+    <h2>List user</h2>
+  </div>
+  <form method="post" role="form" th:action="@{/users} " class="form-horizontal">
+    <div class="input-group mb-3">
+      <input  type="text" id="name" name="name" class="form-control" placeholder="Enter user name or email"/>
+      <button type="submit" class="btn btn-primary" >Find</button>
+    </div>
+    <a class="btn btn-success" th:href="@{/addUser}" role="button">Add</a>
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+    <tr align="center">
+      <th>name</th>
+      <th>gender</th>
+      <th>birthday</th>
+      <th>cmnd</th>
+      <th>email</th>
+      <th>username</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each = "user : ${listUsers}">
+      <td th:text = "${user.name}" align=""></td>
+      <td th:text = "${user.gender}" align="center"></td>
+      <td th:text = "${user.birthday}" align="center"></td>
+      <td th:text = "${user.cmnd}" align="center"></td>
+      <td th:text = "${user.email}" ></td>
+      <td th:text = "${user.username}"></td>
+      <td align="center">
+        <a class="btn btn-warning" href="#" role="button" th:href="${'/user/edit/' + user.id}">Edit</a>
+        <a class="btn btn-danger" href="#" role="button" th:href="${'/user/delete/' + user.id}">Delete</a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  </form>
+</div>
+
 </body>
 </html>

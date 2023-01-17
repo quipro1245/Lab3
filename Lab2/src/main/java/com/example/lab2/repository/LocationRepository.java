@@ -1,6 +1,6 @@
 package com.example.lab2.repository;
 
-import com.example.lab2.model.Location;
+import com.example.lab2.response.model.Location;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
