@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class WeatherDTO {
 
-    private String id;
+
     @JsonProperty("location_id")
     private String locationId;
     @JsonProperty("time_epoch")
@@ -72,13 +72,7 @@ public class WeatherDTO {
     @JsonProperty("gust_kph")
     private Double gustKph;
 
-    public String getId() {
-        return id;
-    }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getLocationId() {
         return locationId;
