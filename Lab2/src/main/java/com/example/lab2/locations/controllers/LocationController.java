@@ -2,6 +2,8 @@ package com.example.lab2.locations.controllers;
 
 import com.example.lab2.controller.MongoConfig;
 
+import com.example.lab2.locations.models.LocationDTO;
+import com.example.lab2.locations.models.LocationName;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -17,8 +19,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.util.List;
 
 import static com.example.lab2.locations.service.LocationService.exportDownloadExcelLocations;
 import static com.example.lab2.locations.service.LocationService.exportDownloadJsonLocations;
@@ -29,10 +33,14 @@ public class LocationController {
     @Autowired
     MongoConfig mongoConfig;
 
-//    @PostMapping(value = "/getLocations")
-//    public List<LocationDTO> getListLocations() {
-//        return LocationService.getListLocations(mongoConfig.getUrl(), mongoConfig.getDb());
-//    }
+    @PostMapping(value = "/getLocations")
+    public ResponseEntity<Response> getListLocations() {
+        Response locationResponse = new Response();
+        locationResponse.setStatus("200");
+        locationResponse.setResult(LocationService.getListLocations(mongoConfig.getUrl(), mongoConfig.getDb()));
+        locationResponse.setMessage("Success");
+        return ResponseEntity.ok(locationResponse);
+    }
 
 
     @PostMapping(value = "/findLocations")
@@ -48,6 +56,23 @@ public class LocationController {
         }
         locationResponse.setStatus("200");
         locationResponse.setResult(LocationService.findLocations(input, mongoConfig.getUrl(), mongoConfig.getDb()));
+        locationResponse.setMessage("Success");
+        return ResponseEntity.ok(locationResponse);
+    }
+
+    @PostMapping(value = "/findLocationByName")
+    public ResponseEntity<Response> findLocationByName(@RequestBody LocationName input, BindingResult bindingResult) throws IOException {
+
+        Response locationResponse = new Response();
+        if (bindingResult.hasErrors()) {
+
+            logger.error("Find locations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            locationResponse.setStatus("400");
+            locationResponse.setMessage("ERROR: find locations: " + bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return ResponseEntity.badRequest().body(locationResponse);
+        }
+        locationResponse.setStatus("200");
+        locationResponse.setResult(LocationService.findLocationByName(input, mongoConfig.getUrl(), mongoConfig.getDb()));
         locationResponse.setMessage("Success");
         return ResponseEntity.ok(locationResponse);
     }
@@ -187,6 +212,11 @@ public class LocationController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                 .body(resource);
+    }
+    @PostMapping("/importFileExcelLocation")
+    public List<LocationDTO> importFileExcelLocation(@RequestParam("file") MultipartFile reapExcelDataFile) {
+
+        return   LocationService.importFileExcelLocation(mongoConfig.getUrl(), mongoConfig.getDb(),reapExcelDataFile);
     }
 
 }

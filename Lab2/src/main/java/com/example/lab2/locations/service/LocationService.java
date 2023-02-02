@@ -3,22 +3,29 @@ package com.example.lab2.locations.service;
 import com.example.lab2.controller.ConnectionMongoDB;
 import com.example.lab2.controller.ExportExcel;
 import com.example.lab2.locations.models.LocationDTO;
+import com.example.lab2.locations.models.LocationName;
 import com.example.lab2.locations.models.LocationRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.lang.reflect.Modifier;
@@ -140,13 +147,13 @@ public class LocationService {
             } else {
                 for (Document doc : myDoc) {
                     LocationDTO locationDTO = new LocationDTO();
-                    locationDTO.setId(doc.get("id").toString());
-                    locationDTO.setName(doc.get("name").toString());
-                    locationDTO.setCountry(doc.get("country").toString());
-                    locationDTO.setRegion(doc.get("region").toString());
-                    locationDTO.setLat(doc.get("lat").toString());
-                    locationDTO.setLon(doc.get("lon").toString());
-                    locationDTO.setUrl(doc.get("url").toString());
+                    locationDTO.setId(ObjectUtils.isEmpty(doc.get("id"))?"":doc.get("id").toString());
+                    locationDTO.setName(ObjectUtils.isEmpty(doc.get("name"))?"":doc.get("name").toString());
+                    locationDTO.setCountry(ObjectUtils.isEmpty(doc.get("country"))?"":doc.get("country").toString());
+                    locationDTO.setRegion(ObjectUtils.isEmpty(doc.get("region"))?"":doc.get("region").toString());
+                    locationDTO.setLat(ObjectUtils.isEmpty(doc.get("lat"))?"":doc.get("lat").toString());
+                    locationDTO.setLon(ObjectUtils.isEmpty(doc.get("lon"))?"":doc.get("lon").toString());
+                    locationDTO.setUrl(ObjectUtils.isEmpty(doc.get("url"))?"":doc.get("url").toString());
                     listLocation.add(locationDTO);
                 }
             }
@@ -157,6 +164,43 @@ public class LocationService {
         return listLocation;
     }
 
+    public static List<LocationDTO> importFileExcelLocation(String url, String db, MultipartFile reapExcelDataFile) {
+        List<LocationDTO> listLocation = new ArrayList<>();
+        try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+            XSSFWorkbook workbook = new XSSFWorkbook(reapExcelDataFile.getInputStream());
+            XSSFSheet worksheet = workbook.getSheetAt(0);
+
+            for(int i=1;i<worksheet.getPhysicalNumberOfRows() ;i++) {
+                LocationDTO locationDTO = new LocationDTO();
+                XSSFRow row = worksheet.getRow(i);
+                DataFormatter formatter = new DataFormatter();
+
+                locationDTO.setId(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_ID)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_ID)));
+                locationDTO.setName(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_NAME)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_NAME)));
+                locationDTO.setRegion(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_REGION)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_REGION)));
+                locationDTO.setCountry(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_COUNTRY)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_COUNTRY)));
+                locationDTO.setLat(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_LAT)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_LAT)));
+                locationDTO.setLon(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_LON)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_LON)));
+                locationDTO.setUrl(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_URL)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_URL)));
+
+                ObjectMapper mapper = new ObjectMapper();
+                BasicDBObject query = new BasicDBObject();
+                query.put("id", locationDTO.getId());
+                BasicDBObject updateObject = new BasicDBObject();
+                updateObject.put("$set", mapper.convertValue(locationDTO,Document.class));
+                UpdateOptions options = new UpdateOptions().upsert(true);
+                database.getCollection("Locations").updateOne(query, updateObject, options);
+                logger.info("Post Locations Document locations upsert successfully " + locationDTO.getId());
+                listLocation.add(locationDTO);
+            }
+
+        } catch (Exception e) {
+            logger.error("Không thể kết nối: "+e);
+            logger.error("getListLocations, url: " + url);
+        }
+        return listLocation;
+    }
     // Find Location follow request
     //@PostMapping(value = "/postFindLocations")
     public static List<LocationDTO> findLocations(LocationRequest input, String url, String db) {
@@ -202,9 +246,45 @@ public class LocationService {
         return listLocation;
     }
 
+    public static List<LocationDTO> findLocationByName(LocationName input, String url, String db) {
+        String[] inputRequest = input.getInput().split(",");
+//        String inputTrim = input.getInput().trim();
+//        String inputFormat = inputTrim;
+//        if (inputTrim.contains("  "))
+//            inputFormat = inputTrim.replaceAll("( ){2,}", " ");// Xóa khoảng trắng giữa chuỗi
+        List<LocationDTO> listLocation = new ArrayList<>();
+        try (MongoClient mongoClient = new ConnectionMongoDB().getMongoClient(url)) {
+            MongoDatabase database = new ConnectionMongoDB().getMongoDatabase(mongoClient, db);
+            MongoCollection<Document> collection = database.getCollection("Locations");
+            Bson filters = Filters.in("name", inputRequest);
+            FindIterable<Document> myDoc = collection.find(filters);
+            if (myDoc.first()==null) {
+                logger.error(String.format("Find Location: location không tìm thấy theo request: ,input: %s, url: %s, db: %s " ,inputRequest, url, db));
+            } else {
+                for (Document doc : myDoc) {
+                    LocationDTO locationDTO = new LocationDTO();
+
+                    locationDTO.setId(ObjectUtils.isEmpty(doc.get("id"))?"":doc.get("id").toString());
+                    locationDTO.setName(ObjectUtils.isEmpty(doc.get("name"))?"":doc.get("name").toString());
+                    locationDTO.setCountry(ObjectUtils.isEmpty(doc.get("country"))?"":doc.get("country").toString());
+                    locationDTO.setRegion(ObjectUtils.isEmpty(doc.get("region"))?"":doc.get("region").toString());
+                    locationDTO.setLat(ObjectUtils.isEmpty(doc.get("lat"))?"":doc.get("lat").toString());
+                    locationDTO.setLon(ObjectUtils.isEmpty(doc.get("lon"))?"":doc.get("lon").toString());
+                    locationDTO.setUrl(ObjectUtils.isEmpty(doc.get("url"))?"":doc.get("url").toString());
+                    listLocation.add(locationDTO);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Find location, Không thể kết nối Exception: "+e);
+            logger.error(String.format("Find location,input: %s, url: %s, db: %s " ,inputRequest, url, db));
+
+        }
+        return listLocation;
+    }
+
     // Export file Json for Locations
     //@PostMapping(value = "/exportJsonLocations")
-    public static List<LocationDTO> exportJsonLocations(LocationRequest input, String url, String db) throws IOException {
+    public static List<LocationDTO> exportJsonLocations(LocationRequest input, String url, String db) {
         // Get Current Directory using getAbsolutePath()
         // Get list locations
         List<LocationDTO> listLocation = findLocations(input, url, db);
@@ -252,7 +332,7 @@ public class LocationService {
         }
         return listLocation;
     }
-    public static String exportDownloadJsonLocations(LocationRequest input, String url, String db) throws IOException {
+    public static String exportDownloadJsonLocations(LocationRequest input, String url, String db) {
         // Get Current Directory using getAbsolutePath()
         // Get list locations
         String fileName = null;
@@ -289,7 +369,7 @@ public class LocationService {
     }
     // Export file excel for locations
     //@PostMapping(value = "/exportExcelLocations")
-    public static List<LocationDTO> exportExcelLocations(LocationRequest input, String url, String db) throws IOException {
+    public static List<LocationDTO> exportExcelLocations(LocationRequest input, String url, String db) {
         List<LocationDTO> listLocation = findLocations(input, url, db);
         if (listLocation == null)
             logger.error("Export Excel Location: ListLocation không có data");
@@ -321,7 +401,7 @@ public class LocationService {
         }
         return listLocation;
     }
-    public static String exportDownloadExcelLocations(LocationRequest input, String url, String db) throws IOException {
+    public static String exportDownloadExcelLocations(LocationRequest input, String url, String db) {
         String fileName=null;
         List<LocationDTO> listLocation = findLocations(input, url, db);
         if (listLocation == null)

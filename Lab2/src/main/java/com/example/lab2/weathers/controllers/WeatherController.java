@@ -2,8 +2,11 @@ package com.example.lab2.weathers.controllers;
 
 
 import com.example.lab2.controller.MongoConfig;
+import com.example.lab2.locations.models.LocationDTO;
 import com.example.lab2.locations.models.LocationRequest;
+import com.example.lab2.locations.service.LocationService;
 import com.example.lab2.response.Response;
+import com.example.lab2.weathers.models.WeatherDTO;
 import com.example.lab2.weathers.models.WeatherRequest;
 import com.example.lab2.weathers.service.WeatherService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,13 +23,16 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.example.lab2.locations.service.LocationService.exportDownloadJsonLocations;
 import static com.example.lab2.weathers.service.WeatherService.exportDownloadExcelWeather;
@@ -206,5 +212,11 @@ public class WeatherController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                 .body(resource);
+    }
+
+    @PostMapping("/importFileExcelWeather")
+    public List<WeatherDTO> importFileExcelLocation(@RequestParam("file") MultipartFile reapExcelDataFile) {
+
+        return   WeatherService.importFileExcelWeather(mongoConfig.getUrl(), mongoConfig.getDb(),reapExcelDataFile);
     }
 }
