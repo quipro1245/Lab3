@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Weather</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css" rel="stylesheet">
     <style>
         .modal {
           display: none;
@@ -52,7 +53,6 @@
         .lblValue {
             font-size: 20px;
         }
-
     </style>
 </head>
 <body>
@@ -63,19 +63,25 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a id="login" aria-current="page" class="nav-link active" th:if="${session.id == null}" th:href="@{/login}">Login</a>
+                    <a aria-current="page" class="nav-link active" id="login" th:href="@{/login}"
+                       th:if="${session.id == null}">Login</a>
                 </li>
                 <li class="nav-item">
-                    <a id="user" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/user}">User</a>
+                    <a aria-current="page" class="nav-link active" id="user"
+                       th:href="@{/user}"
+                       th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">User</a>
                 </li>
                 <li class="nav-item">
-                    <a id="location" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/location}">Location</a>
+                    <a aria-current="page" class="nav-link active" id="location"
+                       th:href="@{/location}" th:if="${session.id != null and session.permission != 'manageRed'}">Location</a>
                 </li>
                 <li class="nav-item">
-                    <a id="weather" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/weather}">Weather</a>
+                    <a aria-current="page" class="nav-link active" id="weather" th:href="@{/weather}"
+                       th:if="${session.id != null}">Weather</a>
                 </li>
                 <li class="nav-item">
-                    <a id="logout" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/logout}" >Logout</a>
+                    <a aria-current="page" class="nav-link active" id="logout" th:href="@{/logout}"
+                       th:if="${session.id != null}">Logout</a>
                 </li>
             </ul>
         </div>
@@ -95,13 +101,13 @@
                         <th width="20%"></th>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">id:</label></td>
+                        <td><label class="lblName">id:</label></td>
                         <td><label class="lblValue" id="id" value=""></label></td>
-                        <td> <label class="lblName">location id: </label></td>
+                        <td><label class="lblName">location id: </label></td>
                         <td><label class="lblValue" id="locationID" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">time epoch: </label></td>
+                        <td><label class="lblName">time epoch: </label></td>
                         <td><label class="lblValue" id="timeEpoch" value=""></label></td>
                         <td><label class="lblName">time: </label></td>
                         <td><label class="lblValue" id="time" value=""></label></td>
@@ -114,14 +120,14 @@
                     </tr>
                     <tr>
                         <td><label class="lblName">is day: </label></td>
-                        <td> <label class="lblValue" id="isDay" value=""></label></td>
-                        <td>  <label class="lblName">wind mph: </label></td>
-                        <td> <label class="lblValue" id="windMph" value=""></label></td>
+                        <td><label class="lblValue" id="isDay" value=""></label></td>
+                        <td><label class="lblName">wind mph: </label></td>
+                        <td><label class="lblValue" id="windMph" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">wind kph: </label></td>
+                        <td><label class="lblName">wind kph: </label></td>
                         <td><label class="lblValue" id="windKph" value=""></label></td>
-                        <td> <label class="lblName">wind degree: </label></td>
+                        <td><label class="lblName">wind degree: </label></td>
                         <td><label class="lblValue" id="windDegree" value=""></label></td>
                     </tr>
                     <tr>
@@ -131,63 +137,63 @@
                         <td><label class="lblValue" id="pressureMb" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">pressure in: </label></td>
+                        <td><label class="lblName">pressure in: </label></td>
                         <td><label class="lblValue" id="pressureIn" value=""></label></td>
-                        <td> <label class="lblName">precip mm: </label></td>
+                        <td><label class="lblName">precip mm: </label></td>
                         <td><label class="lblValue" id="precipMm" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">precip in: </label></td>
+                        <td><label class="lblName">precip in: </label></td>
                         <td><label class="lblValue" id="precipIn" value=""></label></td>
-                        <td> <label class="lblName">humidity: </label></td>
+                        <td><label class="lblName">humidity: </label></td>
                         <td><label class="lblValue" id="humidity" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">cloud: </label></td>
+                        <td><label class="lblName">cloud: </label></td>
                         <td><label class="lblValue" id="cloud" value=""></label></td>
-                        <td> <label class="lblName">feels like c: </label></td>
+                        <td><label class="lblName">feels like c: </label></td>
                         <td><label class="lblValue" id="feelsLikeC" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">feels like f: </label></td>
+                        <td><label class="lblName">feels like f: </label></td>
                         <td><label class="lblValue" id="feelsLikeF" value=""></label></td>
-                        <td> <label class="lblName">windchill c: </label></td>
+                        <td><label class="lblName">windchill c: </label></td>
                         <td><label class="lblValue" id="windchillC" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">windchill f: </label></td>
+                        <td><label class="lblName">windchill f: </label></td>
                         <td><label class="lblValue" id="windchillF" value=""></label></td>
-                        <td> <label class="lblName">heat index c: </label></td>
+                        <td><label class="lblName">heat index c: </label></td>
                         <td><label class="lblValue" id="heatIndexC" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">heat index f: </label></td>
+                        <td><label class="lblName">heat index f: </label></td>
                         <td><label class="lblValue" id="heatIndexF" value=""></label></td>
-                        <td> <label class="lblName">dew point c: </label></td>
+                        <td><label class="lblName">dew point c: </label></td>
                         <td><label class="lblValue" id="dewPointC" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">dew point f: </label></td>
+                        <td><label class="lblName">dew point f: </label></td>
                         <td><label class="lblValue" id="dewPointF" value=""></label></td>
-                        <td> <label class="lblName">will it rain: </label></td>
+                        <td><label class="lblName">will it rain: </label></td>
                         <td><label class="lblValue" id="willItRain" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">chance of rain: </label></td>
+                        <td><label class="lblName">chance of rain: </label></td>
                         <td><label class="lblValue" id="chanceOfRain" value=""></label></td>
-                        <td> <label class="lblName">will it snow: </label></td>
+                        <td><label class="lblName">will it snow: </label></td>
                         <td><label class="lblValue" id="willItSnow" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">chance of snow: </label></td>
+                        <td><label class="lblName">chance of snow: </label></td>
                         <td><label class="lblValue" id="chanceOfSnow" value=""></label></td>
-                        <td> <label class="lblName">vis km: </label></td>
+                        <td><label class="lblName">vis km: </label></td>
                         <td><label class="lblValue" id="visKm" value=""></label></td>
                     </tr>
                     <tr>
-                        <td> <label class="lblName">vis miles: </label></td>
+                        <td><label class="lblName">vis miles: </label></td>
                         <td><label class="lblValue" id="visMiles" value=""></label></td>
-                        <td> <label class="lblName">gust mph: </label></td>
+                        <td><label class="lblName">gust mph: </label></td>
                         <td><label class="lblValue" id="gustMph" value=""></label></td>
                     </tr>
                     <tr>
@@ -208,29 +214,37 @@
         <div class="card-body">
             <div class="input-group mb-3">
                 <label class="mt-1">From &emsp;</label>
-                <input width="10%"  type="datetime-local" id="startDate" name="startDate" class="form-control" required/>
+                <input class="form-control" id="startDate" name="startDate" required type="datetime-local" width="10%"/>
                 <label class="mt-1"> &emsp;to &emsp;</label>
-                <input width="10%" type="datetime-local" id="endDate" name="endDate" class="form-control ms-1" required/>
-                <label class="mt-1"> &emsp;location id: &emsp;</label>
-                <input  type="text" id="input" name="input" class="form-control "  placeholder="Enter location" required/>
-                <button  class="btn btn-primary" id="send" >Find</button>
+                <input class="form-control ms-1" id="endDate" name="endDate" required type="datetime-local"
+                       width="10%"/>
+                <label class="mt-1" id="lblLocationId" th:if="${session.id != null and session.permission != 'manageRed'}"> &emsp;location id: &emsp;</label>
+                <select class="form-control me-1" id="input" name="input" th:if="${session.id != null and session.permission != 'manageRed'}">
+                    <option value=''>-------Select location--------</option>
+                </select>
+                <button class="btn btn-primary ms-1" id="send">&emsp; Find</button>
             </div>
-<!--            <a class="btn btn-success"th:if="${session.permission}== 'admin'" th:href="@{/addUser}" role="button">Add</a>-->
-            <a class="btn btn-success" id="downloadJson" href="#" role="button">Download Json</a>
-            <a class="btn btn-success" id="downloadExcel" href="#" role="button">Download Excel</a>
 
-            <table id="myTable" class="display" style="width:100%">
-                <thead >
+            <!--            <a class="btn btn-success"th:if="${session.permission}== 'admin'" th:href="@{/addUser}" role="button">Add</a>-->
+            <div class="input-group mb-3" id="buttonDownload">
+                <button class="btn btn-success" id="downloadJson" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">Download Json</button>
+                <button class="btn btn-success ms-2" id="downloadExcel" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">Download Excel</button>
+                <input class="ms-2" id="fileUpload" type="file" name="fileUpload" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"/>
+                <button class="btn btn-success ms-1" id="upload" onclick="uploadFile()" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"> Upload </button>
+            </div>
+
+            <table class="display" id="myTable" style="width:100%">
+                <thead>
                 <tr align="center">
 
-                    <th rowspan="2" >location id</th>
-                    <th rowspan="2" >time epoch</th>
-                    <th rowspan="2" >time</th>
-                    <th rowspan="2" >temp c</th>
-                    <th rowspan="2" >temp f</th>
-                    <th colspan="3" >condition</th>
-                    <th rowspan="2" >id</th>
-                    <th rowspan="2" >data</th>
+                    <th rowspan="2">location id</th>
+                    <th rowspan="2">time epoch</th>
+                    <th rowspan="2">time</th>
+                    <th rowspan="2">temp c</th>
+                    <th rowspan="2">temp f</th>
+                    <th colspan="3">condition</th>
+                    <th rowspan="2">id</th>
+                    <th rowspan="2">data</th>
                     <!--        <th></th>-->
                 </tr>
                 <tr>
@@ -272,7 +286,7 @@ $(document).ready( function () {
           ]
     });
 
-    function checkInput(startDate, endDate){
+    function checkInput(startDate, endDate, locationId){
         if(!startDate){
                 alert("Vui lòng nhập ngày bắt đầu");
                 return false;
@@ -285,15 +299,93 @@ $(document).ready( function () {
                 alert("Vui lòng nhập ngày kêt thúc lớn hơn ngày bắt đầu");
                 return false;
         }
+        if(!locationId) {
+            var dayMs =new Date(endDate).getTime() - new Date(startDate).getTime();
+            var day = (dayMs/3600000)/24;
+            console.log(day);
+            if ( day > 5) {
+                alert("khoảng cách giữa hai ngày tối đa 5 do không có locationId");
+                return false;
+            }
+        } else {
+            var regex=/^[0-9|\\\\,]{0,100}$/;
+            if(!locationId.match(regex)){
+                alert("Nhập location id phải là số và nhiều location id thì cách nhau bằng dấu phẩy và không có khoảng trắng");
+                return false;
+            }
+        }
         return true;
     }
 
-    $("#send").click(function(ev) {
+    loadComboBoxLocationId();
 
+
+
+    function loadComboBoxLocationId() {
+        $.ajax({
+                type: "get",
+                contentType: 'application/json',
+                dataType: 'json',
+                url: "getLocation",
+                success: function(data){
+                    var len = data.length;
+                    for( var i = 0; i<len; i++){
+                       var id = data[i]['id'];
+                       var name = data[i]['name'];
+                       $("#input").append("<option value='"+id+"'>"+name+"</option>");
+                    }
+                },
+                error: function(data){
+                     alert('fail find user!');
+                }
+        });
+    }
+
+<!--    function loadButtonDownload() {-->
+<!--        $.ajax({-->
+<!--            type: "get",-->
+<!--            contentType: 'application/json',-->
+<!--            dataType: 'json',-->
+<!--            url: "getSessionPermission",-->
+<!--            success: function(data){-->
+<!--                console.log(data);-->
+<!--                if(data == "user" || data == "admin" ) {-->
+<!--                    $("#downloadJson").show();-->
+<!--                    $("#downloadExcel").show();-->
+<!--                } else {-->
+<!--                    $("#downloadJson").hide();-->
+<!--                    $("#downloadExcel").hide();-->
+<!--                    if (data == "manageRed") {-->
+<!--                        $("#input").hide();-->
+<!--                        $("#lblLocationId").hide();-->
+<!--                    }-->
+<!--                }-->
+<!--            },-->
+<!--            error: function(data){-->
+<!--                 alert('fail find user!');-->
+<!--            }-->
+<!--        });-->
+<!--    }-->
+
+    function buttonClick() {
+         $("#send").prop("disabled", true);
+         $("#downloadJson").prop("disabled", true);
+         $("#downloadExcel").prop("disabled", true);
+    }
+
+    function buttonComplete() {
+        $("#send").prop("disabled", false);
+        $("#downloadJson").prop("disabled", false);
+        $("#downloadExcel").prop("disabled", false);
+    }
+
+    $("#send").click(function(ev) {
+        buttonClick();
         var input = $('#input').val();
         var startDate = $('#startDate').val();
         var endDate = $('#endDate').val();
-        if (checkInput(startDate, endDate) == false) {
+        if (checkInput(startDate, endDate, input) == false) {
+            buttonComplete();
             return false;
         } else {
             $.ajax({
@@ -314,11 +406,11 @@ $(document).ready( function () {
                             t.row.add([ data[index].location_id, data[index].time_epoch, data[index].time, data[index].temp_c, data[index].temp_f, condition.text,image , condition.code,data[index].id, data[index]]).draw(false);
                         });
                     }
-                    return false;
+                    buttonComplete();
                 },
                 error: function(data){
                      alert('fail find user!');
-                     return false;
+                     buttonComplete();
                 }
             });
         }
@@ -378,10 +470,12 @@ $(document).ready( function () {
         var input = $('#input').val();
         var startDate = $('#startDate').val();
         var endDate = $('#endDate').val();
-        if (checkInput(startDate, endDate) == false) {
+        buttonClick();
+        if (checkInput(startDate, endDate, input) == false) {
+            buttonComplete();
             return false;
         } else {
-            e.preventDefault();
+
             $.ajax({
                 type: "post",
                 contentType: 'application/json',
@@ -389,7 +483,7 @@ $(document).ready( function () {
                 url: "exportAndDownloadJsonWeather",
                 data: JSON.stringify({"startDate":startDate, "endDate":endDate, "locationID":input}),
                 success: function(data){
-                    if(data.length==0){
+                    if (data.length == 0) {
                         alert("Không tìm thấy");
                     } else {
                         alert('Download json: Success find weather!');
@@ -427,11 +521,11 @@ $(document).ready( function () {
                             alert('Download json: Success download weather!');
                         }
                     }
-                    return false;
+                    buttonComplete();
                 },
                 error: function(data){
                     alert('fail find user!');
-                    return false;
+                    buttonComplete();
                 }
             });
         }
@@ -440,7 +534,9 @@ $(document).ready( function () {
         var input = $('#input').val();
         var startDate = $('#startDate').val();
         var endDate = $('#endDate').val();
-        if (checkInput(startDate, endDate) == false) {
+        buttonClick();
+        if (checkInput(startDate, endDate, input) == false) {
+            buttonComplete();
             return false;
         } else {
             e.preventDefault();
@@ -472,10 +568,8 @@ $(document).ready( function () {
 <!--                              filename = matches[1].replace(/['"]/g, '');-->
 <!--                            }-->
 <!--                        }-->
-
-
                         //Convert the Byte Data to BLOB object.
-                         var blob = new Blob([data], { type: "application/octetstream" });
+                        var blob = new Blob([data], { type: "application/octetstream" });
                         var d = new Date();
                         var month = d.getMonth()+1;
                         var day = d.getDate();
@@ -494,19 +588,20 @@ $(document).ready( function () {
                             $("body").append(a);
                             a[0].click();
                             $("body").remove(a);
-                            alert('Download json: Success download weather!');
+                            alert('Download excel: Success download weather!');
                         }
                     }
-                    return false;
+                    buttonComplete();
                 },
                 error: function(data){
                     alert('fail find user!');
-                    return false;
+                    buttonComplete();
                 }
             });
         }
     });
 });
+
 </script>
 </body>
 </html>

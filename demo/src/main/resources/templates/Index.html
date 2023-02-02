@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"
-      xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
 >
 <head>
     <meta charset="UTF-8">
@@ -15,26 +15,33 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
         <a class="navbar-brand" th:href="@{/index}">Home</a>
-        <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+        <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"
+                class="navbar-toggler"
                 data-bs-target="#navbarSupportedContent" data-bs-toggle="collapse" type="button">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a id="login" aria-current="page" class="nav-link active" th:if="${session.id == null}" th:href="@{/login}">Login</a>
+                    <a aria-current="page" class="nav-link active" id="login" th:href="@{/login}"
+                       th:if="${session.id == null}">Login</a>
                 </li>
                 <li class="nav-item">
-                    <a id="user" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/user}">User</a>
+                    <a aria-current="page" class="nav-link active" id="user"
+                       th:href="@{/user}"
+                       th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">User</a>
                 </li>
                 <li class="nav-item">
-                    <a id="location" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/location}">Location</a>
+                    <a aria-current="page" class="nav-link active" id="location"
+                       th:href="@{/location}" th:if="${session.id != null and session.permission != 'manageRed'}">Location</a>
                 </li>
                 <li class="nav-item">
-                    <a id="weather" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/weather}">Weather</a>
+                    <a aria-current="page" class="nav-link active" id="weather" th:href="@{/weather}"
+                       th:if="${session.id != null}">Weather</a>
                 </li>
                 <li class="nav-item">
-                    <a id="logout" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/logout}" >Logout</a>
+                    <a aria-current="page" class="nav-link active" id="logout" th:href="@{/logout}"
+                       th:if="${session.id != null}">Logout</a>
                 </li>
             </ul>
         </div>
@@ -47,6 +54,7 @@
     </div>
 </div>
 <script>
+
 <!--    $("#logout").click(function(ev) {-->
 <!--                $.ajax({-->
 <!--                        type: "post",-->
@@ -62,6 +70,7 @@
 
 <!--                });-->
 <!--          });-->
+
 </script>
 </body>
 </html>

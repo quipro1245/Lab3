@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Location</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.fileDownload/1.4.2/jquery.fileDownload.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.fileDownload/1.4.2/jquery.fileDownload.js"></script>
 </head>
@@ -16,26 +17,33 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
         <a class="navbar-brand" th:href="@{/index}">Home</a>
-        <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+        <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"
+                class="navbar-toggler"
                 data-bs-target="#navbarSupportedContent" data-bs-toggle="collapse" type="button">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a id="login" aria-current="page" class="nav-link active" th:if="${session.id == null}" th:href="@{/login}">Login</a>
+                    <a aria-current="page" class="nav-link active" id="login" th:href="@{/login}"
+                       th:if="${session.id == null}">Login</a>
                 </li>
                 <li class="nav-item">
-                    <a id="user" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/user}">User</a>
+                    <a aria-current="page" class="nav-link active" id="user"
+                       th:href="@{/user}"
+                       th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">User</a>
                 </li>
                 <li class="nav-item">
-                    <a id="location" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/location}">Location</a>
+                    <a aria-current="page" class="nav-link active" id="location"
+                       th:href="@{/location}" th:if="${session.id != null and session.permission != 'manageRed'}">Location</a>
                 </li>
                 <li class="nav-item">
-                    <a id="weather" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/weather}">Weather</a>
+                    <a aria-current="page" class="nav-link active" id="weather" th:href="@{/weather}"
+                       th:if="${session.id != null}">Weather</a>
                 </li>
                 <li class="nav-item">
-                    <a id="logout" aria-current="page" class="nav-link active" th:if="${session.id != null}" th:href="@{/logout}" >Logout</a>
+                    <a aria-current="page" class="nav-link active" id="logout" th:href="@{/logout}"
+                       th:if="${session.id != null}">Logout</a>
                 </li>
             </ul>
         </div>
@@ -49,15 +57,18 @@
         </div>
         <div class="card-body">
             <div class="input-group mb-3">
-                <input  type="text" id="input" name="input" class="form-control"  placeholder="Enter user name or email" required/>
-                <button  class="btn btn-primary" id="send" >Find</button>
+                <input class="form-control" id="input" name="input" placeholder="Enter user name or email" required
+                       type="text"/>
+                <button class="btn btn-primary" id="send">Find</button>
             </div>
-
-            <a class="btn btn-success" id="downloadJson" href="#" role="button">Download Json</a>
-            <a class="btn btn-success" id="downloadExcel" href="#" role="button">Download Excel</a>
-
+            <div class="input-group mb-3" id="buttonDownload">
+                <button class="btn btn-success" id="downloadJson" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">Download Json</button>
+                <button class="btn btn-success ms-2" id="downloadExcel" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">Download Excel</button>
+                <input class="ms-2" width="200" id="fileUpload" type="file" name="fileUpload" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"/>
+                <button class="btn btn-success ms-2" id="upload" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"> Upload </button>
+            </div>
             <table id="myTable">
-                <thead >
+                <thead>
                 <tr align="center">
                     <th>id</th>
                     <th>name</th>
@@ -76,6 +87,7 @@
     </div>
 </div>
 <script type="text/javascript">
+
 $(document).ready( function () {
     var t = $('#myTable').DataTable({
          searching: false,
@@ -90,6 +102,7 @@ $(document).ready( function () {
                 { "width": "40%" }
           ]
     });
+
     function checkInput( input) {
         var regex=/^[a-zA-Z0-9]{0,50}$/;
         if(!input){
@@ -102,10 +115,46 @@ $(document).ready( function () {
         }
         return true;
     }
+
+    function buttonClick() {
+         $("#send").prop("disabled", true);
+         $("#downloadJson").prop("disabled", true);
+         $("#downloadExcel").prop("disabled", true);
+    }
+
+    function buttonComplete() {
+        $("#send").prop("disabled", false);
+        $("#downloadJson").prop("disabled", false);
+        $("#downloadExcel").prop("disabled", false);
+    }
+
+<!--    function loadButtonDownload() {-->
+<!--        $.ajax({-->
+<!--            type: "get",-->
+<!--            contentType: 'application/json',-->
+<!--            dataType: 'json',-->
+<!--            url: "getSessionPermission",-->
+<!--            success: function(data){-->
+<!--                console.log(data);-->
+<!--                if(data == "user" || data == "admin") {-->
+<!--                    $("#downloadJson").show();-->
+<!--                    $("#downloadExcel").show();-->
+<!--                } else {-->
+<!--                    $("#downloadJson").hide();-->
+<!--                    $("#downloadExcel").hide();-->
+<!--                }-->
+<!--            },-->
+<!--            error: function(data){-->
+<!--                 alert('fail find user!');-->
+<!--            }-->
+<!--        });-->
+<!--    }-->
+
     $("#send").click(function(ev) {
         var input = $('#input').val();
-
+        buttonClick();
         if(checkInput(input) == false) {
+            buttonComplete();
             return false;
         } else {
             console.log(input);
@@ -115,6 +164,7 @@ $(document).ready( function () {
                 dataType: 'json',
                 url: "location",
                 data: JSON.stringify({"input":input}),
+
                 success: function(data){
                     if(data.length==0){
                         alert("Không tìm thấy");
@@ -125,21 +175,22 @@ $(document).ready( function () {
                             t.row.add([data[index].id, data[index].name, data[index].region, data[index].country, data[index].lat, data[index].lon, data[index].url]).draw(false);
                         });
                     }
-                     return false;
+                     buttonComplete();
                 },
                 error: function(data){
                      alert('fail find user!');
-                     return false;
+                     buttonComplete();
                 }
             });
         }
     });
     $("#downloadJson").click(function (e) {
         var input = $('#input').val();
+        buttonClick();
         if(checkInput(input) == false) {
+            buttonComplete();
             return false;
         } else {
-            e.preventDefault();
             $.ajax({
                 type: "post",
                 contentType: 'application/json',
@@ -196,18 +247,20 @@ $(document).ready( function () {
                             alert('Download json: Success download location!');
                         }
                     }
-                    return false;
+                    buttonComplete();
                 },
                 error: function(data){
                     alert('fail find user!');
-                    return false;
+                    buttonComplete();
                 }
             });
         }
     });
     $("#downloadExcel").click(function (e) {
         var input = $('#input').val();
+        buttonClick();
         if(checkInput(input) == false) {
+            buttonComplete();
             return false;
         } else {
             e.preventDefault();
@@ -266,16 +319,32 @@ $(document).ready( function () {
                             $("body").remove(a);
                         }
                     }
-                    return false;
+                    buttonComplete();
                 },
                 error: function(data){
                     alert('fail find user!');
-                    return false;
+                    buttonComplete();
                 }
             });
         }
     });
+
+    $("#upload").click(function(ev) {
+
+        var formData = new FormData();
+        formData.append("file", fileUpload.files[0]);
+        $.ajax({
+            type: "post",
+            processData: false,
+            contentType: false,
+            url: "importFileExcelLocation",
+            data: formData
+
+        });
+
+    });
 } );
+
 </script>
 </body>
 </html>

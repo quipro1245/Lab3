@@ -1,9 +1,12 @@
 package com.example.demo.ui.weather.service;
 
+import com.example.demo.ui.location.model.LocationDTO;
 import com.example.demo.ui.location.model.Response;
 import com.example.demo.ui.location.service.LocationService;
+import com.example.demo.ui.weather.model.ViewWeather;
 import com.example.demo.ui.weather.model.WeatherRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.*;
@@ -18,12 +21,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 public class WeatherService {
     private final static Logger logger = LogManager.getLogger(WeatherService.class);
-    public static Response findWeatherFollowRequestPaging(String url, WeatherRequest input) {
-        Response result = null;
+    public static Response findWeatherFollowRequestPaging(String url, WeatherRequest input, HttpSession session, ViewWeather viewWeather) {
+        Response result = new Response();
         String uri = url + "/findWeatherFollowRequestPaging";
         try {
 
@@ -36,13 +40,28 @@ public class WeatherService {
             LocalDateTime dateTimeEndDate = LocalDateTime.parse(input.getEndDate(), formatter);
             String startDate = dateTimeStartDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
             String endDate = dateTimeEndDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+            RestTemplate restTemplate = new RestTemplate();
+
+            if ("manageRed".equalsIgnoreCase(session.getAttribute("permission").toString())) {
+                String body = "{\n" +
+                        "\"input\": \"" + viewWeather.getViewWeatherManageRed() + "\"\n" +
+                        "}";
+                ResponseEntity<Response> getNameViewWeatherManageBlue = restTemplate.exchange(url+"/findLocationByName", HttpMethod.POST, new HttpEntity<>(body,headers), Response.class);
+                ObjectMapper mapper = new ObjectMapper();
+                List<LocationDTO> location = List.of(mapper.convertValue(getNameViewWeatherManageBlue.getBody().getResult(), LocationDTO[].class));
+
+//                LocationDTO locationDTO = location.get(0);
+//                System.out.println(locationDTO);
+//                System.out.println(locationDTO.getId());
+                input.setLocationID(location.get(0).getId());
+            }
             String body = "{\n" +
                     "    \"datetime_range\": \"" + startDate + " - " + endDate + "\",\n" +
                     "    \"location_id\": \"" + input.getLocationID() + "\",\n" +
                     "    \"page\": \"1\",\n" +
                     "    \"limit\": \"5\"\n" +
                     "}";
-            RestTemplate restTemplate = new RestTemplate();
+
             ResponseEntity<Response> response = restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(body, headers), Response.class);
             result = response.getBody();
         } catch (Exception e){

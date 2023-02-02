@@ -1,12 +1,12 @@
 package com.example.demo.ui.location.controller;
 
+import com.example.demo.ui.weather.model.ViewWeather;
 import com.example.demo.ui.location.model.LocationRequest;
 import com.example.demo.ui.location.model.Response;
 import com.example.demo.ui.location.service.LocationService;
 import com.example.demo.ui.user.model.BankEndConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -14,10 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +28,9 @@ public class LocationController {
     BankEndConfig bankEndConfig;
     @Autowired
     LocationService locationService;
+    @Autowired
+    ViewWeather viewWeather;
+
 
     @GetMapping("/location")
     public String getLocation(HttpSession session) {
@@ -39,23 +40,33 @@ public class LocationController {
     }
 
     @PostMapping("/location")
-    public @ResponseBody String findListUserByRequest(@RequestBody LocationRequest locationRequest, HttpSession session) throws JsonProcessingException {
+    public @ResponseBody String findLocationByRequest(@RequestBody LocationRequest locationRequest, HttpSession session) throws JsonProcessingException {
         String result = "";
-        if (session.getAttribute("id") != null) {
+        if (session.getAttribute("id") != null && !"manageRed".equalsIgnoreCase(session.getAttribute("permission").toString())) {
 
-            Response response = LocationService.findLocations(bankEndConfig.getUrl(), locationRequest.getInput());
+            Response response = locationService.findLocations(bankEndConfig.getUrl(), locationRequest.getInput());
             ObjectMapper mapper = new ObjectMapper();
             result = mapper.writeValueAsString(response.getResult());
         }
         return result;
     }
+    @GetMapping("/getLocation")
+    public @ResponseBody String postLocation( HttpSession session) throws JsonProcessingException {
+        String result = "";
+        if (session.getAttribute("id") != null) {
 
+            Response response = locationService.getLocations(bankEndConfig.getUrl(), session,viewWeather);
+            ObjectMapper mapper = new ObjectMapper();
+            result = mapper.writeValueAsString(response.getResult());
+        }
+        return result;
+    }
     @PostMapping(value = "/exportAndDownloadJsonLocations", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InputStreamResource> exportAndDownloadJsonLocations(@RequestBody LocationRequest locationRequest, HttpSession session) throws JsonProcessingException, FileNotFoundException {
         File result;
         if (session.getAttribute("id") != null) {
 
-            result = LocationService.exportAndDownloadJsonLocations(bankEndConfig.getUrl(), locationRequest);
+            result = locationService.exportAndDownloadJsonLocations(bankEndConfig.getUrl(), locationRequest);
             return ResponseEntity.ok()
 //                   .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + result.getName() + "\"")
@@ -69,7 +80,7 @@ public class LocationController {
         File result;
         if (session.getAttribute("id") != null) {
 //            String contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            result = LocationService.exportAndDownloadExcelLocations(bankEndConfig.getUrl(), locationRequest);
+            result = locationService.exportAndDownloadExcelLocations(bankEndConfig.getUrl(), locationRequest);
             return ResponseEntity.ok()
 //                   .contentType(MediaType.parseMediaType(contentType))
                      .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + result.getName() + "\"")
@@ -78,4 +89,14 @@ public class LocationController {
 
         return ResponseEntity.badRequest().build();
     }
+
+    @PostMapping("/importFileExcelLocation")
+    public @ResponseBody String importFileExcelLocation(HttpSession session, @RequestParam("file") MultipartFile file) {
+        String result = "";
+        if (session.getAttribute("id") != null) {
+            result = locationService.importFileExcelLocation(bankEndConfig.getUrl(), file);
+        }
+        return result;
+    }
+
 }

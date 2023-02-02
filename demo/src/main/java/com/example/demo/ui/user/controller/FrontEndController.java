@@ -74,10 +74,20 @@ public class FrontEndController {
 //    }
 
     @GetMapping("/user")
-    public String getUser(PageUser page, HttpSession session) {
+    public String getUser( HttpSession session) {
         if (session.getAttribute("id") == null)
             return "redirect:/login";
+        if (!"user".equalsIgnoreCase(session.getAttribute("permission").toString()) && !"admin".equalsIgnoreCase(session.getAttribute("permission").toString()))
+            return "redirect:/index";
         return "User";
+    }
+
+    @GetMapping("/getSessionPermission")
+    public @ResponseBody String getSessionPermission( HttpSession session) throws JsonProcessingException {
+        String result = "";
+        ObjectMapper mapper = new ObjectMapper();
+        result = mapper.writeValueAsString(session.getAttribute("permission"));
+        return result;
     }
 
     @PostMapping("/user")

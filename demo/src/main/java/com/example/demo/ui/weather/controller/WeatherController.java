@@ -2,6 +2,7 @@ package com.example.demo.ui.weather.controller;
 
 import com.example.demo.ui.location.model.Response;
 import com.example.demo.ui.user.model.BankEndConfig;
+import com.example.demo.ui.weather.model.ViewWeather;
 import com.example.demo.ui.weather.model.WeatherDTO;
 import com.example.demo.ui.weather.model.WeatherRequest;
 import com.example.demo.ui.weather.service.WeatherService;
@@ -28,6 +29,9 @@ public class WeatherController {
     BankEndConfig bankEndConfig;
     @Autowired
     WeatherService weatherService;
+    @Autowired
+    ViewWeather viewWeather;
+
 
     @GetMapping("/weather")
     public String getWeather( HttpSession session) {
@@ -52,7 +56,7 @@ public class WeatherController {
         String result = "";
         if (session.getAttribute("id") != null) {
 
-            Response response = weatherService.findWeatherFollowRequestPaging(bankEndConfig.getUrl(), input);
+            Response response = weatherService.findWeatherFollowRequestPaging(bankEndConfig.getUrl(), input, session, viewWeather);
             List<WeatherDTO> listWeather = (List<WeatherDTO>) response.getResult();
 
             ObjectMapper mapper = new ObjectMapper();

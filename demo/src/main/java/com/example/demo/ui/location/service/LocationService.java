@@ -1,24 +1,23 @@
 package com.example.demo.ui.location.service;
 
-import com.example.demo.ui.location.model.LocationDTO;
-import com.example.demo.ui.location.model.LocationRequest;
-import com.example.demo.ui.location.model.LocationResponseEntity;
-import com.example.demo.ui.location.model.Response;
+import com.example.demo.ui.location.model.*;
+import com.example.demo.ui.weather.model.ViewWeather;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 
 
@@ -47,6 +46,40 @@ public class LocationService {
         return response;
     }
 
+    public static Response getLocations(String url, HttpSession session, ViewWeather viewWeather) {
+        String uri = url + "/getLocations";
+        Response response = new Response();
+
+//        if ("manageRed".equalsIgnoreCase(session.getAttribute("permission").toString())) {
+//            List<LocationDTO> listLocationDTO = new ArrayList<>();
+//            LocationDTO locationWimbledon = new LocationDTO();
+//            locationWimbledon.setId("2819887");
+//            locationWimbledon.setName("Wimbledon");
+//            listLocationDTO.add(locationWimbledon);
+//            response.setResult(listLocationDTO);
+//            return response;
+//        }
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+            RestTemplate restTemplate = new RestTemplate();
+            if ("manageBlue".equalsIgnoreCase(session.getAttribute("permission").toString())) {
+                String body = "{\n" +
+                        "\"input\": \"" + viewWeather.getViewWeatherManageBlue() + "\"\n" +
+                        "}";
+                ResponseEntity<Response> result = restTemplate.exchange(url+"/findLocationByName", HttpMethod.POST, new HttpEntity<>(body,headers), Response.class);
+                return  result.getBody();
+            }
+            ResponseEntity<Response> result = restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(headers), Response.class);
+            response = result.getBody();
+        } catch (Exception e) {
+            logger.error("Find location, error: " + e);
+            logger.error(String.format("Find location error, uri: %s ", uri));
+        }
+        return response;
+    }
     public static File exportAndDownloadJsonLocations(String url, LocationRequest locationRequest) {
         String uri = url + "/exportAndDownloadJsonLocations";
         File file = null;
@@ -112,5 +145,34 @@ public class LocationService {
             logger.error(String.format("Export and download json location, uri: %s, input: %s ", uri, locationRequest.getInput()));
         }
         return file;
+    }
+    public static String importFileExcelLocation(String url, MultipartFile file) {
+        String uri = url + "/importFileExcelLocation";
+        String result = "";
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+//            String body = "{\n" +
+//                    "\"input\": \"" + locationRequest.getInput() + "\"\n" +
+//                "}";
+//            ObjectMapper mapper = new ObjectMapper();
+//            LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+//            map.add("file", file);
+            MultiValueMap<String, Object> body
+                    = new LinkedMultiValueMap<>();
+            body.add("file", file);
+//            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new    HttpEntity<LinkedMultiValueMap<String, Object>>(
+//                    map, headers);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity
+                    = new HttpEntity<>(body, headers);
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.postForEntity(uri,  requestEntity, String.class);
+            result = response.getBody();
+        } catch (Exception e) {
+            logger.error("Export and download json location, error: " + e);
+            logger.error(String.format("Export and download json location, uri: %s ", uri));
+        }
+        return result;
     }
 }
