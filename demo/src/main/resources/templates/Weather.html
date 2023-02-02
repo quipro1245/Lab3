@@ -101,10 +101,10 @@
                         <th width="20%"></th>
                     </tr>
                     <tr>
-                        <td><label class="lblName">id:</label></td>
-                        <td><label class="lblValue" id="id" value=""></label></td>
                         <td><label class="lblName">location id: </label></td>
                         <td><label class="lblValue" id="locationID" value=""></label></td>
+                        <td><label class="lblName">gust kph: </label></td>
+                        <td><label class="lblValue" id="gustKph" value=""></label></td>
                     </tr>
                     <tr>
                         <td><label class="lblName">time epoch: </label></td>
@@ -196,12 +196,7 @@
                         <td><label class="lblName">gust mph: </label></td>
                         <td><label class="lblValue" id="gustMph" value=""></label></td>
                     </tr>
-                    <tr>
-                        <td><label class="lblName">gust kph: </label></td>
-                        <td><label class="lblValue" id="gustKph" value=""></label></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
+
                 </table>
 
             </div>
@@ -243,7 +238,6 @@
                     <th rowspan="2">temp c</th>
                     <th rowspan="2">temp f</th>
                     <th colspan="3">condition</th>
-                    <th rowspan="2">id</th>
                     <th rowspan="2">data</th>
                     <!--        <th></th>-->
                 </tr>
@@ -268,11 +262,8 @@ $(document).ready( function () {
             {
                 target: 8,
                 visible: false,
-            },
-            {
-                target: 9,
-                visible: false,
             }
+
         ],
           "columns": [
                 { "width": "10%" },
@@ -403,7 +394,7 @@ $(document).ready( function () {
                         $.each(data, function(index) {
                             var condition = data[index].condition;
                             var image = "<img width=\"32\"  src=\""+condition.icon+"\">";
-                            t.row.add([ data[index].location_id, data[index].time_epoch, data[index].time, data[index].temp_c, data[index].temp_f, condition.text,image , condition.code,data[index].id, data[index]]).draw(false);
+                            t.row.add([ data[index].location_id, data[index].time_epoch, data[index].time, data[index].temp_c, data[index].temp_f, condition.text,image , condition.code, data[index]]).draw(false);
                         });
                     }
                     buttonComplete();
@@ -421,9 +412,9 @@ $(document).ready( function () {
         console.log(row.data());
         console.log(row.data()[8]);
 <!--        var weather = JSON.parse(row.data()[8]);-->
-        console.log(row.data()[9].time);
-        var weather = row.data()[9];
-        $('#id').html(weather.id);
+        console.log(row.data()[8].time);
+        var weather = row.data()[8];
+
         $('#locationID').html(weather.location_id);
         $('#timeEpoch').html(weather.time_epoch);
         $('#time').html(weather.time);
