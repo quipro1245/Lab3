@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,12 +35,13 @@ public class WeatherController {
 
 
     @GetMapping("/weather")
-    public String getWeather( HttpSession session) {
+    public String getWeather(HttpSession session) {
         if (session.getAttribute("id") == null)
             return "redirect:/login";
         return "Weather";
     }
-//    @GetMapping("/weatherDetail")
+
+    //    @GetMapping("/weatherDetail")
 //    public String getWeatherWithID(HttpSession session, WeatherDTO weatherDTO) {
 //        if (session.getAttribute("id") == null)
 //            return "redirect:/login";
@@ -56,7 +58,7 @@ public class WeatherController {
         String result = "";
         if (session.getAttribute("id") != null) {
 
-            Response response = weatherService.findWeatherFollowRequestPaging(bankEndConfig.getUrl(), input, session, viewWeather);
+            Response response = WeatherService.findWeatherFollowRequestPaging(bankEndConfig.getUrl(), input, session, viewWeather);
             List<WeatherDTO> listWeather = (List<WeatherDTO>) response.getResult();
 
             ObjectMapper mapper = new ObjectMapper();
@@ -68,9 +70,8 @@ public class WeatherController {
     @PostMapping(value = "/exportAndDownloadJsonWeather", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InputStreamResource> exportAndDownloadJsonWeather(@RequestBody WeatherRequest input, HttpSession session) throws JsonProcessingException, FileNotFoundException {
         File file;
-        if (session.getAttribute("id") != null) {
-
-            file = weatherService.exportAndDownloadJsonWeather(bankEndConfig.getUrl(), input);
+        if (session.getAttribute("id") != null && ("user".equalsIgnoreCase(session.getAttribute("permission").toString()) || "admin".equalsIgnoreCase(session.getAttribute("permission").toString()))) {
+            file = WeatherService.exportAndDownloadJsonWeather(bankEndConfig.getUrl(), input);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                     .contentLength(file.length()).body(new InputStreamResource(new FileInputStream(file)));
@@ -81,13 +82,22 @@ public class WeatherController {
     @PostMapping(value = "/exportAndDownloadExcelWeather", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<InputStreamResource> exportAndDownloadExcelWeather(@RequestBody WeatherRequest input, HttpSession session) throws JsonProcessingException, FileNotFoundException {
         File file;
-        if (session.getAttribute("id") != null) {
+        if (session.getAttribute("id") != null && ("user".equalsIgnoreCase(session.getAttribute("permission").toString()) || "admin".equalsIgnoreCase(session.getAttribute("permission").toString()))) {
 
-            file = weatherService.exportAndDownloadExcelWeather(bankEndConfig.getUrl(), input);
+            file = WeatherService.exportAndDownloadExcelWeather(bankEndConfig.getUrl(), input);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                     .contentLength(file.length()).body(new InputStreamResource(new FileInputStream(file)));
         }
         return ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/importFileExcelWeather")
+    public @ResponseBody String importFileExcelWeather(HttpSession session, @RequestParam("file") MultipartFile file) {
+        String result = "";
+        if (session.getAttribute("id") != null && ("manageImport".equalsIgnoreCase(session.getAttribute("permission").toString()) || "admin".equalsIgnoreCase(session.getAttribute("permission").toString()))) {
+            result = WeatherService.importFileExcelWeather(bankEndConfig.getUrl(), file);
+        }
+        return result;
     }
 }

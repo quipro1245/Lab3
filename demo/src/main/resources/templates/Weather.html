@@ -224,7 +224,7 @@
             <div class="input-group mb-3" id="buttonDownload">
                 <button class="btn btn-success" id="downloadJson" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">Download Json</button>
                 <button class="btn btn-success ms-2" id="downloadExcel" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin')}">Download Excel</button>
-                <input class="ms-2" id="fileUpload" type="file" name="fileUpload" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"/>
+                <input class="ms-2" id="fileUpload" type="file" name="fileUpload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"/>
                 <button class="btn btn-success ms-1" id="upload" onclick="uploadFile()" th:if="${session.id != null and (session.permission == 'user' or session.permission == 'admin' or session.permission == 'manageImport')}"> Upload </button>
             </div>
 
@@ -362,12 +362,16 @@ $(document).ready( function () {
          $("#send").prop("disabled", true);
          $("#downloadJson").prop("disabled", true);
          $("#downloadExcel").prop("disabled", true);
+         $("#upload").prop("disabled", true);
+         $("#fileUpload").prop("disabled", true);
     }
 
     function buttonComplete() {
         $("#send").prop("disabled", false);
         $("#downloadJson").prop("disabled", false);
         $("#downloadExcel").prop("disabled", false);
+        $("#upload").prop("disabled", false);
+        $("#fileUpload").prop("disabled", false);
     }
 
     $("#send").click(function(ev) {
@@ -591,6 +595,36 @@ $(document).ready( function () {
             });
         }
     });
+
+    $("#upload").click(function(ev) {
+        buttonClick();
+        var formData = new FormData();
+        formData.append("file", fileUpload.files[0]);
+        $.ajax({
+            type: "post",
+            processData: false,
+            contentType: false,
+            url: "importFileExcelWeather",
+            data: formData,
+            success: function(data){
+                $('#fileUpload').val('');
+                buttonComplete();
+                if(data == "200"){
+                    alert("Success");
+                } else {
+                    alert("Error");
+                }
+            },
+            error: function(data){
+                alert('fail find user!');
+                $('#fileUpload').val('');
+                buttonComplete();
+            }
+
+        });
+
+    });
+
 });
 
 </script>

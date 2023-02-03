@@ -64,7 +64,7 @@ public class LocationController {
     @PostMapping(value = "/exportAndDownloadJsonLocations", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InputStreamResource> exportAndDownloadJsonLocations(@RequestBody LocationRequest locationRequest, HttpSession session) throws JsonProcessingException, FileNotFoundException {
         File result;
-        if (session.getAttribute("id") != null) {
+        if (session.getAttribute("id") != null && ("user".equalsIgnoreCase(session.getAttribute("permission").toString()) || "admin".equalsIgnoreCase(session.getAttribute("permission").toString()))) {
 
             result = locationService.exportAndDownloadJsonLocations(bankEndConfig.getUrl(), locationRequest);
             return ResponseEntity.ok()
@@ -78,7 +78,7 @@ public class LocationController {
     @PostMapping(value = "/exportAndDownloadExcelLocations", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<InputStreamResource> exportAndDownloadExcelLocations(@RequestBody LocationRequest locationRequest, HttpSession session) throws JsonProcessingException, FileNotFoundException {
         File result;
-        if (session.getAttribute("id") != null) {
+        if (session.getAttribute("id") != null && ("user".equalsIgnoreCase(session.getAttribute("permission").toString()) || "admin".equalsIgnoreCase(session.getAttribute("permission").toString()))) {
 //            String contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
             result = locationService.exportAndDownloadExcelLocations(bankEndConfig.getUrl(), locationRequest);
             return ResponseEntity.ok()
@@ -93,8 +93,10 @@ public class LocationController {
     @PostMapping("/importFileExcelLocation")
     public @ResponseBody String importFileExcelLocation(HttpSession session, @RequestParam("file") MultipartFile file) {
         String result = "";
-        if (session.getAttribute("id") != null) {
+        if (session.getAttribute("id") != null && ("manageImport".equalsIgnoreCase(session.getAttribute("permission").toString()) || "admin".equalsIgnoreCase(session.getAttribute("permission").toString()))) {
             result = locationService.importFileExcelLocation(bankEndConfig.getUrl(), file);
+        } else {
+            result = "400";
         }
         return result;
     }

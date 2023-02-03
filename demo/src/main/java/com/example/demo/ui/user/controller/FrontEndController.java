@@ -93,7 +93,7 @@ public class FrontEndController {
     @PostMapping("/user")
     public @ResponseBody String findListUserByRequest(@RequestBody UserRequest userRequest, HttpSession session) throws JsonProcessingException {
         String result = "";
-        if (session.getAttribute("id") != null) {
+        if (session.getAttribute("id") != null && !"user".equalsIgnoreCase(session.getAttribute("permission").toString()) && !"admin".equalsIgnoreCase(session.getAttribute("permission").toString())) {
 
             PageUser listUser = UserService.findUserFollowRequest(bankEndConfig.getUrlUser(), userRequest);
             ObjectMapper mapper = new ObjectMapper();
@@ -116,7 +116,7 @@ public class FrontEndController {
     public @ResponseBody String postAddUser(UserDTO user, HttpSession session) throws JsonProcessingException {
         if (session.getAttribute("id") == null)
             return "login";
-        if ("user".equalsIgnoreCase(session.getAttribute("permission").toString()))
+        if (!"admin".equalsIgnoreCase(session.getAttribute("permission").toString()))
             return "user";
         String result = "";
         ResponseAddUser responseAddUser = UserService.addUser(bankEndConfig.getUrlUser(), user);

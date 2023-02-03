@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -152,26 +153,27 @@ public class LocationService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            String fileName = file.getOriginalFilename();
+            MultiValueMap<String, String> fileMap = new LinkedMultiValueMap<>();
+            Resource resource = file.getResource();
+            ContentDisposition contentDisposition = ContentDisposition
+                    .builder("form-data")
+                    .name("file")
+                    .filename(fileName)
+                    .build();
+            fileMap.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
+            HttpEntity<byte[]> fileEntity = new HttpEntity<>(resource.getInputStream().readAllBytes(), fileMap);
 
-//            String body = "{\n" +
-//                    "\"input\": \"" + locationRequest.getInput() + "\"\n" +
-//                "}";
-//            ObjectMapper mapper = new ObjectMapper();
-//            LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-//            map.add("file", file);
-            MultiValueMap<String, Object> body
-                    = new LinkedMultiValueMap<>();
-            body.add("file", file);
-//            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new    HttpEntity<LinkedMultiValueMap<String, Object>>(
-//                    map, headers);
-            HttpEntity<MultiValueMap<String, Object>> requestEntity
-                    = new HttpEntity<>(body, headers);
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", fileEntity);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>( body, headers);
+
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response = restTemplate.postForEntity(uri,  requestEntity, String.class);
-            result = response.getBody();
+            ResponseEntity<Response> response = restTemplate.exchange(uri,HttpMethod.POST,  requestEntity, Response.class);
+            result = response.getBody().getStatus();
         } catch (Exception e) {
-            logger.error("Export and download json location, error: " + e);
-            logger.error(String.format("Export and download json location, uri: %s ", uri));
+            logger.error("Location service import file excel location, error: " + e);
+            logger.error(String.format("Location service import file excel location, uri: %s ", uri));
         }
         return result;
     }
