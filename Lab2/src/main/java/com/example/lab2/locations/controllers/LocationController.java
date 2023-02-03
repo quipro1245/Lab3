@@ -214,9 +214,17 @@ public class LocationController {
                 .body(resource);
     }
     @PostMapping("/importFileExcelLocation")
-    public List<LocationDTO> importFileExcelLocation(@RequestParam("file") MultipartFile reapExcelDataFile) {
-
-        return   LocationService.importFileExcelLocation(mongoConfig.getUrl(), mongoConfig.getDb(),reapExcelDataFile);
+    public ResponseEntity<Response> importFileExcelLocation(@RequestParam("file") MultipartFile reapExcelDataFile) {
+        Response locationResponse = new Response();
+        try {
+            locationResponse.setStatus("200");
+            locationResponse.setResult(LocationService.importFileExcelLocation(mongoConfig.getUrl(), mongoConfig.getDb(), reapExcelDataFile));
+            locationResponse.setMessage("Success");
+            return ResponseEntity.ok(locationResponse);
+        } catch (Exception e) {
+            locationResponse.setStatus("400");
+            locationResponse.setMessage("ERROR: import file excel locations: ");
+        }
+        return ResponseEntity.ok(locationResponse);
     }
-
 }

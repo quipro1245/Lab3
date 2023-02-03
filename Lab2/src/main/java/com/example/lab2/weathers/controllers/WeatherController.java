@@ -2,14 +2,9 @@ package com.example.lab2.weathers.controllers;
 
 
 import com.example.lab2.controller.MongoConfig;
-import com.example.lab2.locations.models.LocationDTO;
-import com.example.lab2.locations.models.LocationRequest;
-import com.example.lab2.locations.service.LocationService;
 import com.example.lab2.response.Response;
-import com.example.lab2.weathers.models.WeatherDTO;
 import com.example.lab2.weathers.models.WeatherRequest;
 import com.example.lab2.weathers.service.WeatherService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,11 +27,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
-import static com.example.lab2.locations.service.LocationService.exportDownloadJsonLocations;
-import static com.example.lab2.weathers.service.WeatherService.exportDownloadExcelWeather;
-import static com.example.lab2.weathers.service.WeatherService.exportDownloadJsonWeather;
+import static com.example.lab2.weathers.service.WeatherService.*;
 
 @RestController
 public class WeatherController {
@@ -117,8 +109,9 @@ public class WeatherController {
 
         return ResponseEntity.ok(weatherResponse);
     }
+
     @PostMapping(value = "/findWeatherFollowRequest")
-    public ResponseEntity<Response> findWeatherFollowRequest(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult ) {
+    public ResponseEntity<Response> findWeatherFollowRequest(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
 
         Response weatherResponse = new Response();
         if (bindingResult.hasErrors()) {
@@ -140,8 +133,9 @@ public class WeatherController {
         return ResponseEntity.ok(weatherResponse);
 
     }
+
     @PostMapping(value = "/findWeatherFollowRequestPaging")
-    public ResponseEntity<Response> findWeatherFollowRequestPaging(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult ) {
+    public ResponseEntity<Response> findWeatherFollowRequestPaging(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) {
 
         Response weatherResponse = new Response();
         if (bindingResult.hasErrors()) {
@@ -163,6 +157,7 @@ public class WeatherController {
         return ResponseEntity.ok(weatherResponse);
 
     }
+
     @PostMapping(value = "/exportAndDownloadJsonWeather")
     public ResponseEntity<?> exportAndDownloadJsonWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
         //return  LocationService.exportJsonLocations(input);
@@ -188,6 +183,7 @@ public class WeatherController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                 .body(resource);
     }
+
     @PostMapping(value = "/exportAndDownloadExcelWeather")
     public ResponseEntity<?> exportAndDownloadExcelWeather(@RequestBody @Valid WeatherRequest input, BindingResult bindingResult) throws IOException {
         //return  LocationService.exportJsonLocations(input);
@@ -215,8 +211,17 @@ public class WeatherController {
     }
 
     @PostMapping("/importFileExcelWeather")
-    public List<WeatherDTO> importFileExcelLocation(@RequestParam("file") MultipartFile reapExcelDataFile) {
-
-        return   WeatherService.importFileExcelWeather(mongoConfig.getUrl(), mongoConfig.getDb(),reapExcelDataFile);
+    public ResponseEntity<Response> importFileExcelLocation(@RequestParam("file") MultipartFile reapExcelDataFile) {
+        Response weatherResponse = new Response();
+        try {
+            weatherResponse.setStatus("200");
+            weatherResponse.setResult(importFileExcelWeather(mongoConfig.getUrl(), mongoConfig.getDb(), reapExcelDataFile));
+            weatherResponse.setMessage("Success");
+            return ResponseEntity.ok(weatherResponse);
+        } catch (Exception e) {
+            weatherResponse.setStatus("400");
+            weatherResponse.setMessage("ERROR: import file excel weather: ");
+        }
+        return ResponseEntity.ok(weatherResponse);
     }
 }

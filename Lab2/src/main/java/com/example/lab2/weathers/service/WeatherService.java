@@ -2,6 +2,8 @@ package com.example.lab2.weathers.service;
 
 import com.example.lab2.controller.ConnectionMongoDB;
 import com.example.lab2.controller.ExportExcel;
+import com.example.lab2.locations.models.LocationDTO;
+import com.example.lab2.locations.service.LocationService;
 import com.example.lab2.weathers.models.ConditionDTO;
 import com.example.lab2.weathers.models.WeatherDTO;
 import com.example.lab2.weathers.models.WeatherRequest;
@@ -27,7 +29,6 @@ import org.bson.conversions.Bson;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.DataInput;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -44,38 +45,40 @@ public class WeatherService {
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private static final int COLUMN_INDEX_ID = 0;
-    private static final int COLUMN_TIME_EPOCH = 1;
-    private static final int COLUMN_TIME = 2;
-    private static final int COLUMN_TEMP_C = 3;
-    private static final int COLUMN_TEMP_F = 4;
-    private static final int COLUMN_IS_DAY = 5;
-    private static final int COLUMN_CONDITION = 6;
-    private static final int COLUMN_WIND_MPH = 7;
-    private static final int COLUMN_WIND_KPH = 8;
-    private static final int COLUMN_WIND_DEGREE = 9;
-    private static final int COLUMN_WIND_DIR = 10;
-    private static final int COLUMN_PRESSURE_MB = 11;
-    private static final int COLUMN_PRESSURE_IN = 12;
-    private static final int COLUMN_PRECIP_MM = 13;
-    private static final int COLUMN_PRECIP_IN = 14;
-    private static final int COLUMN_HUMIDITY = 15;
-    private static final int COLUMN_CLOUD = 16;
-    private static final int COLUMN_FEELSLIKE_C = 17;
-    private static final int COLUMN_FEELSLIKE_F = 18;
-    private static final int COLUMN_WINDCHILL_C = 19;
-    private static final int COLUMN_WINDCHILL_F = 20;
-    private static final int COLUMN_HEATINDEX_C = 21;
-    private static final int COLUMN_HEATINDEX_F = 22;
-    private static final int COLUMN_DEWPOINT_C = 23;
-    private static final int COLUMN_DEWPOINT_F = 24;
-    private static final int COLUMN_WILL_IT_RAIN = 25;
-    private static final int COLUMN_CHANCE_OF_RAIN = 26;
-    private static final int COLUMN_WILL_IT_SNOW = 27;
-    private static final int COLUMN_CHANCE_IT_SNOW = 28;
-    private static final int COLUMN_VIS_KM = 29;
-    private static final int COLUMN_VIS_MILES = 30;
-    private static final int COLUMN_GUST_MPH = 31;
-    private static final int COLUMN_GUST_KPH = 32;
+
+    private static final int COLUMN_LOCATION_NAME = 1;
+    private static final int COLUMN_TIME_EPOCH = 2;
+    private static final int COLUMN_TIME = 3;
+    private static final int COLUMN_TEMP_C = 4;
+    private static final int COLUMN_TEMP_F = 5;
+    private static final int COLUMN_IS_DAY = 6;
+    private static final int COLUMN_CONDITION = 7;
+    private static final int COLUMN_WIND_MPH = 8;
+    private static final int COLUMN_WIND_KPH = 9;
+    private static final int COLUMN_WIND_DEGREE = 10;
+    private static final int COLUMN_WIND_DIR = 11;
+    private static final int COLUMN_PRESSURE_MB = 12;
+    private static final int COLUMN_PRESSURE_IN = 13;
+    private static final int COLUMN_PRECIP_MM = 14;
+    private static final int COLUMN_PRECIP_IN = 15;
+    private static final int COLUMN_HUMIDITY = 16;
+    private static final int COLUMN_CLOUD = 17;
+    private static final int COLUMN_FEELSLIKE_C = 18;
+    private static final int COLUMN_FEELSLIKE_F = 19;
+    private static final int COLUMN_WINDCHILL_C = 20;
+    private static final int COLUMN_WINDCHILL_F = 21;
+    private static final int COLUMN_HEATINDEX_C = 22;
+    private static final int COLUMN_HEATINDEX_F = 23;
+    private static final int COLUMN_DEWPOINT_C = 24;
+    private static final int COLUMN_DEWPOINT_F = 25;
+    private static final int COLUMN_WILL_IT_RAIN = 26;
+    private static final int COLUMN_CHANCE_OF_RAIN = 27;
+    private static final int COLUMN_WILL_IT_SNOW = 28;
+    private static final int COLUMN_CHANCE_IT_SNOW = 29;
+    private static final int COLUMN_VIS_KM = 30;
+    private static final int COLUMN_VIS_MILES = 31;
+    private static final int COLUMN_GUST_MPH = 32;
+    private static final int COLUMN_GUST_KPH = 33;
 
     // Get list weather
     //@PostMapping(value = "/getWeather")
@@ -298,6 +301,10 @@ public class WeatherService {
         cell.setCellStyle(cellStyle);
         cell.setCellValue("location_id");
 
+        cell = row.createCell(COLUMN_LOCATION_NAME);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue("location_name");
+
         cell = row.createCell(COLUMN_TIME_EPOCH);
         cell.setCellStyle(cellStyle);
         cell.setCellValue("time_epoch");
@@ -428,11 +435,25 @@ public class WeatherService {
 
     }
 
+    public static String getNameLocation(String locationId, List<LocationDTO> listLocation) {
+        String result = "";
+        for (LocationDTO location : listLocation) {
+            if (locationId.equalsIgnoreCase(location.getId())) {
+                result = location.getName();
+            }
+        }
+        return result;
+
+    }
+
     // Write data
-    public static void writeBook(WeatherDTO weatherDTO, Row row) {
+    public static void writeBook(WeatherDTO weatherDTO, Row row, List<LocationDTO> listLocation) {
 
         Cell cell = row.createCell(COLUMN_INDEX_ID);
         cell.setCellValue(weatherDTO.getLocationId());
+
+        cell = row.createCell(COLUMN_LOCATION_NAME);
+        cell.setCellValue(getNameLocation(weatherDTO.getLocationId(), listLocation));
 
         cell = row.createCell(COLUMN_TIME_EPOCH);
         cell.setCellValue(weatherDTO.getTimeEpoch());
@@ -545,6 +566,7 @@ public class WeatherService {
     public static List<WeatherDTO> exportExcelWeather(WeatherRequest input, String url, String db) throws IOException {
         //List<LocationDTO> listLocation = getListLocations();
         List<WeatherDTO> listWeather = findWeatherFollowRequest(input, url, db);
+        List<LocationDTO> listLocation = LocationService.getListLocations(url, db);
         if (listWeather == null)
             logger.error("Export Excel Weather: ListWeather không có data");
         try {
@@ -567,7 +589,7 @@ public class WeatherService {
                 // Create row
                 Row row = sheet.createRow(rowIndex);
                 // Write data on row
-                writeBook(weatherDTO, row);
+                writeBook(weatherDTO, row, listLocation);
                 rowIndex++;
             }
             // Auto resize column witdth
@@ -586,6 +608,7 @@ public class WeatherService {
 
         String fileName = null;
         List<WeatherDTO> listWeather = findWeatherFollowRequest(input, url, db);
+        List<LocationDTO> listLocation = LocationService.getListLocations(url, db);
         if (listWeather == null)
             logger.error("Export and download excel weather: ListWeather không có data");
         try {
@@ -608,7 +631,7 @@ public class WeatherService {
                 // Create row
                 Row row = sheet.createRow(rowIndex);
                 // Write data on row
-                writeBook(weatherDTO, row);
+                writeBook(weatherDTO, row, listLocation);
                 rowIndex++;
             }
             // Auto resize column witdth
@@ -788,54 +811,56 @@ public class WeatherService {
 //                System.out.println(row.toString());
 //                weatherDTO = objectMapper.readValue((DataInput) row, WeatherDTO.class);
 //
-                weatherDTO.setLocationId(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_ID)))?"":formatter.formatCellValue(row.getCell(COLUMN_INDEX_ID)));
-                weatherDTO.setTimeEpoch(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TIME_EPOCH)))?"":formatter.formatCellValue(row.getCell(COLUMN_TIME_EPOCH))));
-                weatherDTO.setTime(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TIME)))?"":formatter.formatCellValue(row.getCell(COLUMN_TIME)));
-                weatherDTO.setTempC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TEMP_C)))?"":formatter.formatCellValue(row.getCell(COLUMN_TEMP_C))));
-                weatherDTO.setTempF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TEMP_F)))?"":formatter.formatCellValue(row.getCell(COLUMN_TEMP_F))));
-                weatherDTO.setIsDay(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_IS_DAY)))?"":formatter.formatCellValue(row.getCell(COLUMN_IS_DAY))));
+                weatherDTO.setLocationId(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_INDEX_ID))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_INDEX_ID)));
+                weatherDTO.setTimeEpoch(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TIME_EPOCH))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_TIME_EPOCH))));
+                weatherDTO.setTime(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TIME))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_TIME)));
+                weatherDTO.setTempC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TEMP_C))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_TEMP_C))));
+                weatherDTO.setTempF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_TEMP_F))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_TEMP_F))));
+                weatherDTO.setIsDay(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_IS_DAY))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_IS_DAY))));
                 ConditionDTO conditionDTO = new ConditionDTO();
-                String condition = ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CONDITION)))?"":formatter.formatCellValue(row.getCell(COLUMN_CONDITION));
+                String condition = ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CONDITION))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_CONDITION));
                 String[] conditionArr = condition.split("[;:]");
                 conditionDTO.setText(conditionArr[1]);
                 conditionDTO.setIcon(conditionArr[3]);
                 conditionDTO.setCode(conditionArr[5]);
                 weatherDTO.setCondition(conditionDTO);
-                weatherDTO.setWindMph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_MPH)))?"":formatter.formatCellValue(row.getCell(COLUMN_WIND_MPH))));
-                weatherDTO.setWindKph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_KPH)))?"":formatter.formatCellValue(row.getCell(COLUMN_WIND_KPH))));
-                weatherDTO.setWindDegree(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_DEGREE)))?"":formatter.formatCellValue(row.getCell(COLUMN_WIND_DEGREE))));
-                weatherDTO.setWindDir(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_DIR)))?"":formatter.formatCellValue(row.getCell(COLUMN_WIND_DIR)));
-                weatherDTO.setPressureMb(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_MB)))?"":formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_MB))));
-                weatherDTO.setPressureIn(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_IN)))?"":formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_IN))));
-                weatherDTO.setPrecipMm(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRECIP_MM)))?"":formatter.formatCellValue(row.getCell(COLUMN_PRECIP_MM))));
-                weatherDTO.setPrecipIn(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRECIP_IN)))?"":formatter.formatCellValue(row.getCell(COLUMN_PRECIP_IN))));
-                weatherDTO.setHumidity(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_HUMIDITY)))?"":formatter.formatCellValue(row.getCell(COLUMN_HUMIDITY))));
-                weatherDTO.setCloud(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CLOUD)))?"":formatter.formatCellValue(row.getCell(COLUMN_CLOUD))));
-                weatherDTO.setFeelsLikeC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_C)))?"":formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_C))));
-                weatherDTO.setFeelsLikeF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_F)))?"":formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_F))));
-                weatherDTO.setWindChillC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_C)))?"":formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_C))));
-                weatherDTO.setWindChillF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_F)))?"":formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_F))));
-                weatherDTO.setHeatIndexC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_C)))?"":formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_C))));
-                weatherDTO.setHeatIndexF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_F)))?"":formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_F))));
-                weatherDTO.setDewPointC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_C)))?"":formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_C))));
-                weatherDTO.setDewPointF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_F)))?"":formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_F))));
-                weatherDTO.setWillItRain(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_RAIN)))?"":formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_RAIN))));
-                weatherDTO.setChanceOfRain(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CHANCE_OF_RAIN)))?"":formatter.formatCellValue(row.getCell(COLUMN_CHANCE_OF_RAIN))));
-                weatherDTO.setWillItSnow(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_SNOW)))?"":formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_SNOW))));
-                weatherDTO.setChanceOfSnow(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CHANCE_IT_SNOW)))?"":formatter.formatCellValue(row.getCell(COLUMN_CHANCE_IT_SNOW))));
-                weatherDTO.setVisKm(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_VIS_KM)))?"":formatter.formatCellValue(row.getCell(COLUMN_VIS_KM))));
-                weatherDTO.setVisMiles(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_VIS_MILES)))?"":formatter.formatCellValue(row.getCell(COLUMN_VIS_MILES))));
-                weatherDTO.setGustMph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_GUST_MPH)))?"":formatter.formatCellValue(row.getCell(COLUMN_GUST_MPH))));
-                weatherDTO.setGustKph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_GUST_KPH)))?"":formatter.formatCellValue(row.getCell(COLUMN_GUST_KPH))));
+                weatherDTO.setWindMph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_MPH))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WIND_MPH))));
+                weatherDTO.setWindKph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_KPH))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WIND_KPH))));
+                weatherDTO.setWindDegree(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_DEGREE))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WIND_DEGREE))));
+                weatherDTO.setWindDir(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WIND_DIR))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WIND_DIR)));
+                weatherDTO.setPressureMb(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_MB))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_MB))));
+                weatherDTO.setPressureIn(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_IN))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_PRESSURE_IN))));
+                weatherDTO.setPrecipMm(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRECIP_MM))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_PRECIP_MM))));
+                weatherDTO.setPrecipIn(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_PRECIP_IN))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_PRECIP_IN))));
+                weatherDTO.setHumidity(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_HUMIDITY))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_HUMIDITY))));
+                weatherDTO.setCloud(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CLOUD))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_CLOUD))));
+                weatherDTO.setFeelsLikeC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_C))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_C))));
+                weatherDTO.setFeelsLikeF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_F))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_FEELSLIKE_F))));
+                weatherDTO.setWindChillC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_C))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_C))));
+                weatherDTO.setWindChillF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_F))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WINDCHILL_F))));
+                weatherDTO.setHeatIndexC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_C))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_C))));
+                weatherDTO.setHeatIndexF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_F))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_HEATINDEX_F))));
+                weatherDTO.setDewPointC(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_C))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_C))));
+                weatherDTO.setDewPointF(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_F))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_DEWPOINT_F))));
+                weatherDTO.setWillItRain(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_RAIN))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_RAIN))));
+                weatherDTO.setChanceOfRain(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CHANCE_OF_RAIN))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_CHANCE_OF_RAIN))));
+                weatherDTO.setWillItSnow(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_SNOW))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_WILL_IT_SNOW))));
+                weatherDTO.setChanceOfSnow(Integer.parseInt(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_CHANCE_IT_SNOW))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_CHANCE_IT_SNOW))));
+                weatherDTO.setVisKm(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_VIS_KM))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_VIS_KM))));
+                weatherDTO.setVisMiles(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_VIS_MILES))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_VIS_MILES))));
+                weatherDTO.setGustMph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_GUST_MPH))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_GUST_MPH))));
+                weatherDTO.setGustKph(Double.parseDouble(ObjectUtils.isEmpty(formatter.formatCellValue(row.getCell(COLUMN_GUST_KPH))) ? "" : formatter.formatCellValue(row.getCell(COLUMN_GUST_KPH))));
                 ObjectMapper mapper = new ObjectMapper();
                 BasicDBObject query = new BasicDBObject();
                 query.put("location_id", weatherDTO.getLocationId());
                 query.put("time", weatherDTO.getTime());
                 BasicDBObject updateObject = new BasicDBObject();
-                updateObject.put("$set", mapper.convertValue(weatherDTO,Document.class));
+                updateObject.put("$set", mapper.convertValue(weatherDTO, Document.class));
                 UpdateOptions options = new UpdateOptions().upsert(true);
-                database.getCollection("Weather_20220901").updateOne(query, updateObject, options);
-                logger.info("Post weather upsert successfully " + weatherDTO.getLocationId());
+                LocalDateTime dateTime = LocalDateTime.parse(weatherDTO.getTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
+                database.getCollection(String.format("Weather_%s", dateTime.format(DateTimeFormatter.BASIC_ISO_DATE))).updateOne(query, updateObject, options);
+                logger.info(String.format("Post weather upsert successfully, location id: %s, time: %s", weatherDTO.getLocationId(), weatherDTO.getTime()));
                 listWeather.add(weatherDTO);
             }
         } catch (Exception e) {
