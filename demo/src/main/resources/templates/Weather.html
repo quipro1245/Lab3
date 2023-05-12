@@ -597,32 +597,36 @@ $(document).ready( function () {
     });
 
     $("#upload").click(function(ev) {
-        buttonClick();
-        var formData = new FormData();
-        formData.append("file", fileUpload.files[0]);
-        $.ajax({
-            type: "post",
-            processData: false,
-            contentType: false,
-            url: "importFileExcelWeather",
-            data: formData,
-            success: function(data){
-                $('#fileUpload').val('');
-                buttonComplete();
-                if(data == "200"){
-                    alert("Success");
-                } else {
-                    alert("Error");
+        var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+        if (regex.test($("#fileUpload").val().toLowerCase())) {
+            buttonClick();
+            var formData = new FormData();
+            formData.append("file", fileUpload.files[0]);
+            $.ajax({
+                type: "post",
+                processData: false,
+                contentType: false,
+                url: "importFileExcelWeather",
+                data: formData,
+                success: function(data){
+                    $('#fileUpload').val('');
+                    buttonComplete();
+                    if(data == "200"){
+                        alert("Success");
+                    } else {
+                        alert("Error");
+                    }
+                },
+                error: function(data){
+                    alert('fail find user!');
+                    $('#fileUpload').val('');
+                    buttonComplete();
                 }
-            },
-            error: function(data){
-                alert('fail find user!');
-                $('#fileUpload').val('');
-                buttonComplete();
-            }
 
-        });
-
+            });
+        } else {
+            alert("Please upload a valid Excel file!");
+        }
     });
 
 });

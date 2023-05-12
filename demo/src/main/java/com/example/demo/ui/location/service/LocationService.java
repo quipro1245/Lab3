@@ -1,12 +1,12 @@
 package com.example.demo.ui.location.service;
 
-import com.example.demo.ui.location.model.*;
+import com.example.demo.ui.location.model.LocationRequest;
+import com.example.demo.ui.location.model.Response;
 import com.example.demo.ui.weather.model.ViewWeather;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -27,17 +27,25 @@ public class LocationService {
 
     private final static Logger logger = LogManager.getLogger(LocationService.class);
 
-    public static Response findLocations(String url, String input) {
+    public static Response findLocations(String url, String input, HttpSession session, ViewWeather viewWeather) {
         String uri = url + "/findLocations";
         Response response = null;
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            String body = "{\n" +
-                        "\"input\": \"" + input + "\"\n" +
-                    "}";
             RestTemplate restTemplate = new RestTemplate();
+            if ("manageBlue".equalsIgnoreCase(session.getAttribute("permission").toString())) {
+                String body = "{\n" +
+                        "\"input\": \"" + viewWeather.getViewWeatherManageBlue() + "\"\n" +
+                        "}";
+                ResponseEntity<Response> result = restTemplate.exchange(url + "/findLocationByName", HttpMethod.POST, new HttpEntity<>(body, headers), Response.class);
+                return result.getBody();
+            }
+            String body = "{\n" +
+                    "\"input\": \"" + input + "\"\n" +
+                    "}";
+
             ResponseEntity<Response> result = restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(body, headers), Response.class);
             response = result.getBody();
         } catch (Exception e) {
@@ -70,8 +78,8 @@ public class LocationService {
                 String body = "{\n" +
                         "\"input\": \"" + viewWeather.getViewWeatherManageBlue() + "\"\n" +
                         "}";
-                ResponseEntity<Response> result = restTemplate.exchange(url+"/findLocationByName", HttpMethod.POST, new HttpEntity<>(body,headers), Response.class);
-                return  result.getBody();
+                ResponseEntity<Response> result = restTemplate.exchange(url + "/findLocationByName", HttpMethod.POST, new HttpEntity<>(body, headers), Response.class);
+                return result.getBody();
             }
             ResponseEntity<Response> result = restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(headers), Response.class);
             response = result.getBody();
@@ -81,6 +89,7 @@ public class LocationService {
         }
         return response;
     }
+
     public static File exportAndDownloadJsonLocations(String url, LocationRequest locationRequest) {
         String uri = url + "/exportAndDownloadJsonLocations";
         File file = null;
@@ -147,6 +156,7 @@ public class LocationService {
         }
         return file;
     }
+
     public static String importFileExcelLocation(String url, MultipartFile file) {
         String uri = url + "/importFileExcelLocation";
         String result = "";
@@ -166,10 +176,10 @@ public class LocationService {
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("file", fileEntity);
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>( body, headers);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<Response> response = restTemplate.exchange(uri,HttpMethod.POST,  requestEntity, Response.class);
+            ResponseEntity<Response> response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, Response.class);
             result = response.getBody().getStatus();
         } catch (Exception e) {
             logger.error("Location service import file excel location, error: " + e);

@@ -44,7 +44,7 @@ public class LocationController {
         String result = "";
         if (session.getAttribute("id") != null && !"manageRed".equalsIgnoreCase(session.getAttribute("permission").toString())) {
 
-            Response response = locationService.findLocations(bankEndConfig.getUrl(), locationRequest.getInput());
+            Response response = locationService.findLocations(bankEndConfig.getUrl(), locationRequest.getInput(), session, viewWeather);
             ObjectMapper mapper = new ObjectMapper();
             result = mapper.writeValueAsString(response.getResult());
         }

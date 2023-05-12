@@ -218,7 +218,7 @@ public class LocationController {
         Response locationResponse = new Response();
         try {
             locationResponse.setStatus("200");
-            locationResponse.setResult(LocationService.importFileExcelLocation(mongoConfig.getUrl(), mongoConfig.getDb(), reapExcelDataFile));
+            LocationService.importFileExcelLocation(mongoConfig.getUrl(), mongoConfig.getDb(), reapExcelDataFile);
             locationResponse.setMessage("Success");
             return ResponseEntity.ok(locationResponse);
         } catch (Exception e) {

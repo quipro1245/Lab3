@@ -215,7 +215,7 @@ public class WeatherController {
         Response weatherResponse = new Response();
         try {
             weatherResponse.setStatus("200");
-            weatherResponse.setResult(importFileExcelWeather(mongoConfig.getUrl(), mongoConfig.getDb(), reapExcelDataFile));
+            importFileExcelWeather(mongoConfig.getUrl(), mongoConfig.getDb(), reapExcelDataFile);
             weatherResponse.setMessage("Success");
             return ResponseEntity.ok(weatherResponse);
         } catch (Exception e) {

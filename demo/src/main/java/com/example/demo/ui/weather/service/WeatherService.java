@@ -13,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.RestTemplate;
@@ -22,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,6 +59,32 @@ public class WeatherService {
 //                System.out.println(locationDTO);
 //                System.out.println(locationDTO.getId());
                 input.setLocationID(location.get(0).getId());
+            }
+            if ("manageBlue".equalsIgnoreCase(session.getAttribute("permission").toString())) {
+
+                String body = "{\n" +
+                        "\"input\": \"" + viewWeather.getViewWeatherManageBlue() + "\"\n" +
+                        "}";
+                ResponseEntity<Response> getNameViewWeatherManageBlue = restTemplate.exchange(url + "/findLocationByName", HttpMethod.POST, new HttpEntity<>(body, headers), Response.class);
+                ObjectMapper mapper = new ObjectMapper();
+                List<LocationDTO> listLocation = List.of(mapper.convertValue(getNameViewWeatherManageBlue.getBody().getResult(), LocationDTO[].class));
+                int locationID = 0;
+                if (!ObjectUtils.isEmpty(input.getLocationID())) {
+                    for (LocationDTO locationDTO : listLocation) {
+                        if (input.getLocationID().equalsIgnoreCase(locationDTO.getId())) {
+                            locationID++;
+                            break;
+                        }
+                    }
+
+                }
+                if (ObjectUtils.isEmpty(input.getLocationID()) || locationID == 0) {
+                    result.setResult(new ArrayList<>());
+                    return  result;
+//                LocationDTO locationDTO = location.get(0);
+//                System.out.println(locationDTO);
+//                System.out.println(locationDTO.getId());
+                }
             }
             String body = "{\n" +
                     "    \"datetime_range\": \"" + startDate + " - " + endDate + "\",\n" +

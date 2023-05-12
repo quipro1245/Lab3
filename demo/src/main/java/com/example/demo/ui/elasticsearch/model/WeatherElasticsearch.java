@@ -1,80 +1,123 @@
-package com.example.demo.ui.weather.model;
+package com.example.demo.ui.elasticsearch.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 @Document(indexName = "weather")
-public class WeatherDTO {
+public class WeatherElasticsearch {
 
     @Id
-    @JsonProperty("_id")
     private String id;
     @JsonProperty("location_id")
+    @Field(type = FieldType.Long, name = "location_id")
     private String locationId;
     @JsonProperty("time_epoch")
+    @Field(type = FieldType.Date, name = "time_epoch")
     private int timeEpoch;
     @JsonProperty("time")
+    @Field(type = FieldType.Date, name = "time")
     private String time;
     @JsonProperty("temp_c")
+    @Field(type = FieldType.Double, name = "temp_c")
     private Double tempC;
     @JsonProperty("temp_f")
+    @Field(type = FieldType.Double, name = "temp_f")
     private Double tempF;
     @JsonProperty("is_day")
+    @Field(type = FieldType.Long, name = "is_day")
     private int isDay;
-    @JsonProperty("condition")
-    private ConditionDTO condition;
+
+//    @Field(type = FieldType.Long, name = "condition")
+//    private ConditionDTO condition;
+    @JsonProperty("condition_code")
+    @Field(type = FieldType.Keyword, name = "condition_code")
+    private String conditionCode;
+    @JsonProperty("condition_icon")
+    @Field(type = FieldType.Keyword, name = "condition_icon")
+    private String conditionIcon;
+    @JsonProperty("condition_text")
+    @Field(type = FieldType.Keyword, name = "condition_text")
+    private String conditionText;
     @JsonProperty("wind_mph")
+    @Field(type = FieldType.Double, name = "wind_mph")
     private Double windMph;
     @JsonProperty("wind_kph")
+    @Field(type = FieldType.Double, name = "wind_kph")
     private Double windKph;
     @JsonProperty("wind_degree")
+    @Field(type = FieldType.Long, name = "wind_degree")
     private int windDegree;
     @JsonProperty("wind_dir")
+    @Field(type = FieldType.Keyword, name = "wind_dir")
     private String windDir;
     @JsonProperty("pressure_mb")
+    @Field(type = FieldType.Long, name = "pressure_mb")
     private Double pressureMb;
     @JsonProperty("pressure_in")
+    @Field(type = FieldType.Double, name = "pressure_in")
     private Double pressureIn;
     @JsonProperty("precip_mm")
+    @Field(type = FieldType.Double, name = "precip_mm")
     private Double precipMm;
     @JsonProperty("precip_in")
+    @Field(type = FieldType.Double, name = "precip_in")
     private Double precipIn;
     @JsonProperty("humidity")
+    @Field(type = FieldType.Long, name = "humidity")
     private int humidity;
     @JsonProperty("cloud")
+    @Field(type = FieldType.Long, name = "cloud")
     private int cloud;
     @JsonProperty("feelslike_c")
+    @Field(type = FieldType.Double, name = "feelslike_c")
     private Double feelsLikeC;
     @JsonProperty("feelslike_f")
+    @Field(type = FieldType.Double, name = "feelslike_f")
     private Double feelsLikeF;
     @JsonProperty("windchill_c")
+    @Field(type = FieldType.Double, name = "windchill_c")
     private Double windChillC;
     @JsonProperty("windchill_f")
+    @Field(type = FieldType.Double, name = "windchill_f")
     private Double windChillF;
     @JsonProperty("heatindex_c")
+    @Field(type = FieldType.Double, name = "heatindex_c")
     private Double heatIndexC;
     @JsonProperty("heatindex_f")
+    @Field(type = FieldType.Double, name = "heatindex_f")
     private Double heatIndexF;
     @JsonProperty("dewpoint_c")
+    @Field(type = FieldType.Double, name = "dewpoint_c")
     private Double dewPointC;
     @JsonProperty("dewpoint_f")
+    @Field(type = FieldType.Double, name = "dewpoint_f")
     private Double dewPointF;
     @JsonProperty("will_it_rain")
+    @Field(type = FieldType.Long, name = "will_it_rain")
     private int willItRain;
     @JsonProperty("chance_of_rain")
+    @Field(type = FieldType.Long, name = "chance_of_rain")
     private int chanceOfRain;
     @JsonProperty("will_it_snow")
+    @Field(type = FieldType.Long, name = "will_it_snow")
     private int willItSnow;
     @JsonProperty("chance_of_snow")
+    @Field(type = FieldType.Long, name = "chance_of_snow")
     private int chanceOfSnow;
     @JsonProperty("vis_km")
+    @Field(type = FieldType.Double, name = "vis_km")
     private Double visKm;
     @JsonProperty("vis_miles")
+    @Field(type = FieldType.Long, name = "vis_miles")
     private Double visMiles;
     @JsonProperty("gust_mph")
+    @Field(type = FieldType.Double, name = "gust_mph")
     private Double gustMph;
     @JsonProperty("gust_kph")
+    @Field(type = FieldType.Double, name = "gust_kph")
     private Double gustKph;
 
     public String getId() {
@@ -133,12 +176,28 @@ public class WeatherDTO {
         this.isDay = isDay;
     }
 
-    public ConditionDTO getCondition() {
-        return condition;
+    public String getConditionCode() {
+        return conditionCode;
     }
 
-    public void setCondition(ConditionDTO condition) {
-        this.condition = condition;
+    public void setConditionCode(String conditionCode) {
+        this.conditionCode = conditionCode;
+    }
+
+    public String getConditionIcon() {
+        return conditionIcon;
+    }
+
+    public void setConditionIcon(String conditionIcon) {
+        this.conditionIcon = conditionIcon;
+    }
+
+    public String getConditionText() {
+        return conditionText;
+    }
+
+    public void setConditionText(String conditionText) {
+        this.conditionText = conditionText;
     }
 
     public Double getWindMph() {
